@@ -3,11 +3,12 @@ import sys
 import time
 import argparse
 #from src.others.test_rouge_score import RougeScorer
+# sys.path.append('/tmp/pycharm_project_138/no/KoBertSum')
 
 PROBLEM = 'ext'
 
 ## 사용할 path 정의
-# PROJECT_DIR = '/home/uoneway/Project/PreSumm_ko'
+# PROJECT_DIR = '/tmp/pycharm_project_138/no/KoBertSum'
 PROJECT_DIR = os.getcwd()
 print(PROJECT_DIR)
 
@@ -25,7 +26,7 @@ RESULT_DIR = f'{PROJECT_DIR}/{PROBLEM}/results'
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-task", default='test', type=str, choices=['install', 'make_data', 'train', 'valid', 'test'])
-    parser.add_argument("-n_cpus", default='2', type=str)
+    parser.add_argument("-n_cpus", default='32', type=str)
     parser.add_argument("-target_summary_sent", default='abs', type=str)
     parser.add_argument("-visible_gpus", default='0', type=str)
     
@@ -33,6 +34,9 @@ if __name__ == '__main__':
     parser.add_argument("-model_path", default=None, type=str)
     parser.add_argument("-test_from", default=None, type=str)
     args = parser.parse_args()
+
+    # args.task = 'make_data'
+    # args.n_cpus = 32
 
     # now = time.strftime('%m%d_%H%M')
     now = "1209_1236"
@@ -49,7 +53,7 @@ if __name__ == '__main__':
     elif args.task == 'make_data':
         os.chdir(PROJECT_DIR + '/src')
         os.system("python make_data.py -task df")
-        os.system(f"python make_data.py -task train_bert -target_summary_sent abs -n_cpus {args.n_cpus}")
+        os.system(f"python make_data.py -task train_bert -target_summary_sent ext -n_cpus {args.n_cpus}")
         os.system(f"python make_data.py -task test_bert -n_cpus {args.n_cpus}")
 
     # python main.py -task train -target_summary_sent abs -visible_gpus 0
