@@ -21,6 +21,7 @@ LOG_PREPO_FILE = LOG_DIR + '/preprocessing.log'
 MODEL_DIR = f'{PROJECT_DIR}/{PROBLEM}/models' 
 RESULT_DIR = f'{PROJECT_DIR}/{PROBLEM}/results' 
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-task", default='test', type=str, choices=['install', 'make_data', 'train', 'valid', 'test'])
