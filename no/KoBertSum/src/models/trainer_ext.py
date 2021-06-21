@@ -231,7 +231,7 @@ class Trainer(object):
         gold_path = '%s_step_%d.gold' % (self.args.result_path, step)
         num_path = '%s_step_%d_num.csv' % (self.args.result_path, step)
         with open(can_path, 'w') as save_pred:
-            with open(gold_path, 'w') as save_gold:
+            with open(gold_path, 'w') as save_gold, open(num_path, 'w') as save_num:
                 with torch.no_grad():
                     final_idx = []
                     for batch in test_iter:
@@ -307,9 +307,8 @@ class Trainer(object):
                         final_idx.append(batch_selected_idx)
                         #print(batch.tgt_str)
                         # print(pred)
-                        with open(num_path, 'w') as save_num:
-                            for i in range(len(final_idx)):
-                                save_num.write(','.join([str(p) for p in final_idx[i]]) + '\n')
+                        for i in range(len(final_idx)):
+                            save_num.write(','.join([str(p) for p in final_idx[i]]) + '\n')
                         for i in range(len(gold)):
                             save_gold.write(gold[i].strip() + '\n')
                         for i in range(len(pred)):
