@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import argparse
+import codecs
 import pickle
 
 PROBLEM = 'ext'
@@ -188,22 +189,23 @@ if __name__ == '__main__':
         os.makedirs(RAW_DATA_DIR, exist_ok=True)
 
         # import data
-        with open(f'{RAW_DATA_DIR}/train.jsonl', 'r') as json_file:
-            train_json_list = list(json_file)
-        with open(f'{RAW_DATA_DIR}/extractive_test_v2.jsonl', 'r') as json_file:
-            test_json_list = list(json_file)
+        # with open(f'{RAW_DATA_DIR}/train.json', 'r') as json_file:
+        train_json_list = json.load(codecs.open(f'{RAW_DATA_DIR}/train.json', 'r', 'utf-8-sig'))
+        # with open(f'{RAW_DATA_DIR}/test.json', 'r') as json_file:
+        #     test_json_list = list(json_file)
+        test_json_list = json.load(codecs.open(f'{RAW_DATA_DIR}/test.json', 'r', 'utf-8-sig'))
 
-        trains = []
-        for json_str in train_json_list:
-            line = json.loads(json_str)
-            trains.append(line)
-        tests = []
-        for json_str in test_json_list:
-            line = json.loads(json_str)
-            tests.append(line)
+        # trains = []
+        # for json_str in train_json_list:
+        #     line = json.loads(json_str)
+        #     trains.append(line)
+        # tests = []
+        # for json_str in test_json_list:
+        #     line = json.loads(json_str)
+        #     tests.append(line)
 
         # Convert raw data to df
-        df = pd.DataFrame(trains)
+        df = pd.DataFrame(train_json_list)
         df['extractive_sents'] = df.apply(lambda row: list(np.array(row['article_original'])[row['extractive']]) , axis=1)
 
         # random split
@@ -212,7 +214,7 @@ if __name__ == '__main__':
         train_df.reset_index(inplace=True, drop=True)
         valid_df.reset_index(inplace=True, drop=True)
 
-        test_df = pd.DataFrame(tests)
+        test_df = pd.DataFrame(test_json_list)
 
         # save df
         train_df.to_pickle(f"{RAW_DATA_DIR}/train_df.pickle")

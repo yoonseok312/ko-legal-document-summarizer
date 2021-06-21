@@ -229,10 +229,12 @@ class Trainer(object):
 
         can_path = '%s_step_%d.candidate' % (self.args.result_path, step)
         gold_path = '%s_step_%d.gold' % (self.args.result_path, step)
+        num_path = '%s_step_%d_num.csv' % (self.args.result_path, step)
         with open(can_path, 'w') as save_pred:
-            with open(gold_path, 'w') as save_gold:
+            with open(gold_path, 'w') as save_gold, open(num_path, 'w') as save_num:
                 with torch.no_grad():
                     for batch in test_iter:
+                        final_idx = []
                         src = batch.src
                         labels = batch.src_sent_labels
                         segs = batch.segs
@@ -264,6 +266,7 @@ class Trainer(object):
                             # print(selected_ids)
                         # selected_ids = np.sort(selected_ids,1)
                         for i, idx in enumerate(selected_ids):
+                            batch_selected_idx = []
                             _pred = []
                             _pred_idx = []
                             if (len(batch.src_str[i]) == 0):
@@ -276,9 +279,11 @@ class Trainer(object):
                                     if (not _block_tri(candidate, _pred)):
                                         _pred.append(candidate)
                                         _pred_idx.append(j)
+                                        batch_selected_idx.append(j)
                                 else:
                                     _pred.append(candidate)
                                     _pred_idx.append(j)
+                                    batch_selected_idx.append(j)
 
                                 if ((not cal_oracle) and (not self.args.recall_eval) and len(_pred) == 3):
                                     break
@@ -299,8 +304,13 @@ class Trainer(object):
                             pred.append(_pred)
                             pred_idx.append(_pred_idx)
                             gold.append(batch.tgt_str[i])
+                            final_idx.append(batch_selected_idx)
                         #print(batch.tgt_str)
                         # print(pred)
+                        for i in range(len(final_idx)):
+                            #print("called")
+                            #print([str(p) for p in final_idx[i]])
+                            save_num.write(','.join([str(p) for p in final_idx[i]]) + '\n')
                         for i in range(len(gold)):
                             save_gold.write(gold[i].strip() + '\n')
                         for i in range(len(pred)):

@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/KoBertSum" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/temp/mecab-python-0.996" vcs="Git" />
   </component>
 </project>
