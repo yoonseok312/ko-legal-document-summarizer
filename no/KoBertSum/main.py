@@ -100,7 +100,7 @@ if __name__ == '__main__':
         """
         os.system(f"python train.py -task ext -mode validate -test_all True"
             + f" -model_path {MODEL_DIR}/{args.model_path}"
-            + f" -bert_data_path {BERT_DATA_DIR}/valid_abs"
+            + f" -bert_data_path {BERT_DATA_DIR}/valid_ext"
             + f" -result_path {RESULT_DIR}/result_{args.model_path}"
             + f" -log_file {LOG_DIR}/valid_{args.model_path}.log"
             + f" -test_batch_size 500  -batch_size 3000"

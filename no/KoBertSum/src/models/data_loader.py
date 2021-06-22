@@ -91,7 +91,7 @@ def load_dataset(args, corpus_type, shuffle):
             yield _lazy_dataset_loader(pt, corpus_type)
     else:
         # Only one inputters.*Dataset, simple!
-        pt = args.bert_data_path + '/' + corpus_type + '.pt'
+        pt = args.bert_data_path + '/' + 'valid.0000_0999.bert.pt' # FIXME
         yield _lazy_dataset_loader(pt, corpus_type)
 
 
