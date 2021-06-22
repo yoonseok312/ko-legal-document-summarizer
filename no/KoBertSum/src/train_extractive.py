@@ -175,7 +175,7 @@ def validate(args, device_id, pt, step):
 
 
 def test_ext(args, device_id, pt, step):
-    device = "cpu" if args.visible_gpus == '-1' else "cuda:1"
+    device = "cpu" if args.visible_gpus == '-1' else "cuda"
     if (pt != ''):
         test_from = pt
     else:
