@@ -103,6 +103,7 @@ class ErrorHandler(object):
         raise Exception(msg)
 
 
+
 def validate_ext(args, device_id):
     timestep = 0
     if (args.test_all):
