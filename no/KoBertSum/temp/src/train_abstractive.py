@@ -167,11 +167,11 @@ def validate_abs(args, device_id):
 
 def validate(args, device_id, pt, step):
     device = "cpu" if args.visible_gpus == '-1' else "cuda"
-    # if (pt != ''):
-    #     test_from = pt
-    # else:
-    #     test_from = args.test_from
-    test_from = '/tmp/pycharm_project_138/no/KoBertSum/ext/models/1209_1236/model_step_8000.pt'
+    if (pt != ''):
+        test_from = pt
+    else:
+        test_from = args.test_from
+    # test_from = '/tmp/pycharm_project_138/no/KoBertSum/ext/models/1209_1236/model_step_8000.pt'
     logger.info('Loading checkpoint from %s' % test_from)
     checkpoint = torch.load(test_from, map_location=lambda storage, loc: storage)
     opt = vars(checkpoint['opt'])

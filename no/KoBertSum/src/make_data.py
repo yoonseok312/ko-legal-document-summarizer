@@ -129,7 +129,10 @@ def korean_sent_spliter(doc):
 
 
 def create_json_files(df, data_type='train', target_summary_sent=None, path=''):
-    NUM_DOCS_IN_ONE_FILE = 1000
+    if data_type == 'valid':
+        NUM_DOCS_IN_ONE_FILE = 2500
+    else:
+        NUM_DOCS_IN_ONE_FILE = 1000
     start_idx_list = list(range(0, len(df), NUM_DOCS_IN_ONE_FILE))
 
     for start_idx in tqdm(start_idx_list):
@@ -209,7 +212,7 @@ if __name__ == '__main__':
         df['extractive_sents'] = df.apply(lambda row: list(np.array(row['article_original'])[row['extractive']]) , axis=1)
 
         # random split
-        train_df = df.sample(frac=0.95,random_state=42) #random state is a seed value
+        train_df = df.sample(frac=0.9,random_state=42) #random state is a seed value
         valid_df = df.drop(train_df.index)
         train_df.reset_index(inplace=True, drop=True)
         valid_df.reset_index(inplace=True, drop=True)

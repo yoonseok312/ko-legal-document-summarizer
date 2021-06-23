@@ -33,7 +33,7 @@ if __name__ == '__main__':
     test_df = test_df['id']
 
     # 추론결과
-    with open(RESULT_DIR + '/' + f'result_1209_1236_step_8000_num.csv', 'r') as file:
+    with open(RESULT_DIR + '/' + f'result_1209_1237_step_6000_num.csv', 'r') as file:
         print("arg:", sys.argv[1])
         lines = file.readlines()
     # print(lines)
