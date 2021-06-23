@@ -230,6 +230,7 @@ class Trainer(object):
         can_path = '%s_step_%d.candidate' % (self.args.result_path, step)
         gold_path = '%s_step_%d.gold' % (self.args.result_path, step)
         num_path = '%s_step_%d_num.csv' % (self.args.result_path, step)
+
         with open(can_path, 'w') as save_pred:
             with open(gold_path, 'w') as save_gold, open(num_path, 'w') as save_num:
                 with torch.no_grad():
@@ -295,6 +296,15 @@ class Trainer(object):
                                 print('selected_ids[i]: ', selected_ids[i])
                                 _pred = np.array(batch.src_str[i])[selected_ids[i][:3]]
                                 print(_pred)
+
+                            if len(batch_selected_idx) < 3:
+                                print(batch_selected_idx)
+                                # print('selected_ids: ', selected_ids)
+                                print('batch.src_str[i]: ', batch.src_str[i])
+                                print('selected_ids[i]: ', selected_ids[i])
+                                batch_selected_idx = selected_ids[i][:3]
+                                print(batch_selected_idx)
+
 
 
                             _pred = '<q>'.join(_pred)
