@@ -24,6 +24,7 @@ RESULT_DIR = f'{PROJECT_DIR}/{PROBLEM}/results'
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-task", default='test', type=str, choices=['install', 'make_data', 'train', 'valid', 'test'])
     parser.add_argument("-n_cpus", default='32', type=str)

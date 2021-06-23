@@ -287,14 +287,23 @@ class Trainer(object):
 
                                 if ((not cal_oracle) and (not self.args.recall_eval) and len(_pred) == 3):
                                     break
-                            
-                            if len(_pred) < 3:
-                                print(_pred)
-                                #print('selected_ids: ', selected_ids)
+
+
+                            if len(batch_selected_idx) < 3:
+                                print(batch_selected_idx)
+                                # print('selected_ids: ', selected_ids)
                                 print('batch.src_str[i]: ', batch.src_str[i])
                                 print('selected_ids[i]: ', selected_ids[i])
-                                _pred = np.array(batch.src_str[i])[selected_ids[i][:3]]
-                                print(_pred)
+                                batch_selected_idx = selected_ids[i][:3]
+                                print(batch_selected_idx)
+
+                            # if len(_pred) < 3:
+                            #     print(_pred)
+                            #     #print('selected_ids: ', selected_ids)
+                            #     print('batch.src_str[i]: ', batch.src_str[i])
+                            #     print('selected_ids[i]: ', selected_ids[i])
+                            #     _pred = np.array(batch.src_str[i])[selected_ids[i][:3]]
+                            #     print(_pred)
 
 
                             _pred = '<q>'.join(_pred)
