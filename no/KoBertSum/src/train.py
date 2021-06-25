@@ -43,24 +43,24 @@ RESULT_DIR = f'{PROJECT_DIR}/{PROBLEM}/results'
 
 if __name__ == '__main__':
 
-    os.system(f"""\
-                python train.py -task ext -mode train \
-                -test_from {MODEL_DIR}/1209_1237/model_step_6000.pt \
-                -bert_data_path {BERT_DATA_DIR}/test \
-                -result_path {RESULT_DIR}/result_1209_1237 \
-                -log_file {LOG_DIR}/test_1209_1237.log \
-                -test_batch_size 1  -batch_size 3000 \
-                -sep_optim true -use_interval true -visible_gpus 0 \
-                -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50 \
-                -report_rouge False \
-                -max_tgt_len 100
-            """)
+    # os.system(f"""\
+    #             python train.py -task ext -mode train \
+    #             -test_from {MODEL_DIR}/1209_1237/model_step_6000.pt \
+    #             -bert_data_path {BERT_DATA_DIR}/test \
+    #             -result_path {RESULT_DIR}/result_1209_1237 \
+    #             -log_file {LOG_DIR}/test_1209_1237.log \
+    #             -test_batch_size 1  -batch_size 3000 \
+    #             -sep_optim true -use_interval true -visible_gpus 0 \
+    #             -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50 \
+    #             -report_rouge False \
+    #             -max_tgt_len 100
+    #         """)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
     parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test'])
-    parser.add_argument("-bert_data_path", default='/tmp/pycharm_project_138/no/KoBertSum/ext/data/bert_data/test')
+    parser.add_argument("-bert_data_path", default='/tmp/pycharm_project_138/no/KoBertSum/ext/data/bert_data/train_ext')
     parser.add_argument("-model_path", default='../models/')
     parser.add_argument("-result_path", default=f'{RESULT_DIR}/result_1209_1237')
     parser.add_argument("-temp_dir", default='../temp')
@@ -173,6 +173,7 @@ if __name__ == '__main__':
     #             test_text_abs(args, device_id, cp, step)
 
     # elif (args.task == 'ext'):
+
     if (args.task == 'ext'):
         if (args.mode == 'train'):
             train_ext(args, device_id)

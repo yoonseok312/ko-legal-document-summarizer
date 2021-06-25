@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # args.n_cpus = 32
 
     # now = time.strftime('%m%d_%H%M')
-    now = "1209_1237"
+    now = "lstm"
 
     # python main.py -task install
     if args.task == 'install':
