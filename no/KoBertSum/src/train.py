@@ -25,7 +25,7 @@ def str2bool(v):
 PROBLEM = 'ext'
 
 ## 사용할 path 정의
-PROJECT_DIR = '/tmp/pycharm_project_138/no/KoBertSum'
+PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
 # PROJECT_DIR = os.getcwd()
 print(PROJECT_DIR)
 
@@ -42,6 +42,7 @@ RESULT_DIR = f'{PROJECT_DIR}/{PROBLEM}/results'
 
 
 if __name__ == '__main__':
+
 
     # os.system(f"""\
     #             python train.py -task ext -mode train \
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
     parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test'])
-    parser.add_argument("-bert_data_path", default='/tmp/pycharm_project_138/no/KoBertSum/ext/data/bert_data/train_ext')
+    parser.add_argument("-bert_data_path", default='/tmp/pycharm_project_581/no/KoBertSum/ext/data/bert_data/train_ext')
     parser.add_argument("-model_path", default='../models/')
     parser.add_argument("-result_path", default=f'{RESULT_DIR}/result_1209_1237')
     parser.add_argument("-temp_dir", default='../temp')
@@ -93,7 +94,7 @@ if __name__ == '__main__':
 
     # params for EXT
     parser.add_argument("-ext_dropout", default=0.2, type=float)
-    parser.add_argument("-ext_layers", default=1, type=int)
+    parser.add_argument("-ext_layers", default=2, type=int)
     parser.add_argument("-ext_hidden_size", default=768, type=int)
     parser.add_argument("-ext_heads", default=8, type=int)
     parser.add_argument("-ext_ff_size", default=2048, type=int)

@@ -8,8 +8,8 @@ import argparse
 PROBLEM = 'ext'
 
 ## 사용할 path 정의
-# PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
-PROJECT_DIR = os.getcwd()
+PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
+# PROJECT_DIR = os.getcwd()
 print(PROJECT_DIR)
 
 DATA_DIR = f'{PROJECT_DIR}/{PROBLEM}/data'
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # args.n_cpus = 32
 
     # now = time.strftime('%m%d_%H%M')
-    now = "lstm_generator_layer_1"
+    now = "lstm_ensemble"
     # now = "lstm"
 
 
