@@ -211,6 +211,7 @@ if __name__ == '__main__':
         df = pd.DataFrame(train_json_list)
         df['extractive_sents'] = df.apply(lambda row: list(np.array(row['article_original'])[row['extractive']]) , axis=1)
 
+
         # random split
         train_df = df.sample(frac=0.9,random_state=42) #random state is a seed value
         valid_df = df.drop(train_df.index)
