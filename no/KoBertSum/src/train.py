@@ -145,7 +145,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpus
 
     init_logger(args.log_file)
-    device = "cpu" if args.visible_gpus == '-1' else "cuda"
+    device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
     device_id = 0 if device == "cuda" else -1
 
     # if (args.task == 'abs'):

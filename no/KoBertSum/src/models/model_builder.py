@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from transformers import BertModel, BertConfig
 from torch.nn.init import xavier_uniform_
+import torch.nn.functional as F
 
 from models.decoder import TransformerDecoder
 from models.encoder import Classifier, ExtTransformerEncoder
@@ -149,6 +150,7 @@ class ExtSummarizer(nn.Module):
         )
         self.wo = nn.Linear(self.bert.model.config.hidden_size, 1, bias=True)
         self.sigmoid = nn.Sigmoid()
+        self.generator = Generator(self.bert.model.config.hidden_size)
 
         if (args.encoder == 'baseline'):
             bert_config = BertConfig(self.bert.model.config.vocab_size, hidden_size=args.ext_hidden_size,
@@ -187,7 +189,8 @@ class ExtSummarizer(nn.Module):
         sent_scores_lstm2 = self.sigmoid(self.wo(sent_scores_lstm))
         sent_scores_lstm3 = sent_scores_lstm2.squeeze(-1) * mask_cls.float()
         sent_scores_lstm4 = sent_scores_lstm3.squeeze(-1)
-        return sent_scores_lstm4, mask_cls
+        generator_output = self.generator(sent_scores_lstm4)
+        return generator_output, mask_cls
 
 
 class AbsSummarizer(nn.Module):
@@ -258,3 +261,26 @@ class AbsSummarizer(nn.Module):
         dec_state = self.decoder.init_decoder_state(src, top_vec)
         decoder_outputs, state = self.decoder(tgt[:, :-1], top_vec, dec_state)
         return decoder_outputs, None
+
+class Generator(nn.Module):
+    def __init__(self, d_model, hp=None):
+        super().__init__()
+        self.fc_1 = nn.Linear(d_model, int(d_model / 2))
+        self.fc_2 = nn.Linear(int(d_model / 2), int(d_model / 4))
+        self.fc_3 = nn.Linear(int(d_model / 4), 1)
+
+        self.ln_1 = nn.LayerNorm(int(d_model / 2))
+        self.ln_2 = nn.LayerNorm(int(d_model / 4))
+
+    def forward(self, x):
+        h = self.fc_1(x)
+        h = self.ln_1(h)
+        h = F.relu(h)
+
+        h = self.fc_2(h)
+        h = self.ln_2(h)
+        h = F.relu(h)
+
+        h = self.fc_3(h)
+        h = torch.sigmoid(h)
+        return h

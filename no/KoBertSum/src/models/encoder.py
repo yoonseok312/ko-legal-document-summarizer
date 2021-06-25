@@ -96,7 +96,7 @@ class ExtTransformerEncoder(nn.Module):
         for i in range(self.num_inter_layers):
             x = self.transformer_inter[i](i, x, x, ~mask)  # all_sents * max_tokens * dim
 
-        x = self.layer_norm(x)
+        # x = self.layer_norm(x)
         # sent_scores = self.sigmoid(self.wo(x))
         sent_scores = self.sigmoid(x)
         # sent_scores = sent_scores * mask.float() # sent_scores.squeeze(-1) * mask.float()

@@ -150,7 +150,7 @@ def validate_ext(args, device_id):
 
 
 def validate(args, device_id, pt, step):
-    device = "cpu" if args.visible_gpus == '-1' else "cuda:1"
+    device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
     if (pt != ''):
         test_from = pt
     else:
@@ -208,7 +208,7 @@ def train_ext(args, device_id):
 def train_single_ext(args, device_id):
     init_logger(args.log_file)
 
-    device = "cpu" if args.visible_gpus == '-1' else "cuda"
+    device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
     logger.info('Device ID %d' % device_id)
     logger.info('Device %s' % device)
     torch.manual_seed(args.seed)
