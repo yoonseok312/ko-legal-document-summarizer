@@ -179,6 +179,7 @@ class Trainer(object):
         self.model.eval()
         stats = Statistics()
 
+
         with torch.no_grad():
             for batch in valid_iter:
                 src = batch.src
@@ -192,6 +193,8 @@ class Trainer(object):
                 # print(labels)
                 # print(sent_scores)
                 # print(mask)
+                # print("sent scores:", sent_scores)
+                # print("labels:", labels.float())
                 loss = self.loss(sent_scores, labels.float())
                 loss = (loss * mask.float()).sum()
                 batch_stats = Statistics(float(loss.cpu().data.numpy()), len(labels))

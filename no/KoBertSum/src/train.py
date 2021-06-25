@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     # params for EXT
     parser.add_argument("-ext_dropout", default=0.2, type=float)
-    parser.add_argument("-ext_layers", default=2, type=int)
+    parser.add_argument("-ext_layers", default=1, type=int)
     parser.add_argument("-ext_hidden_size", default=768, type=int)
     parser.add_argument("-ext_heads", default=8, type=int)
     parser.add_argument("-ext_ff_size", default=2048, type=int)
@@ -105,7 +105,6 @@ if __name__ == '__main__':
     parser.add_argument("-min_length", default=15, type=int)
     parser.add_argument("-max_length", default=150, type=int)
     parser.add_argument("-max_tgt_len", default=140, type=int)
-
 
 
     parser.add_argument("-param_init", default=0, type=float)

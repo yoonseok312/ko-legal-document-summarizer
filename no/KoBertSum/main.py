@@ -8,7 +8,7 @@ import argparse
 PROBLEM = 'ext'
 
 ## 사용할 path 정의
-PROJECT_DIR = '/tmp/pycharm_project_138/no/KoBertSum'
+PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
 # PROJECT_DIR = os.getcwd()
 print(PROJECT_DIR)
 
@@ -36,11 +36,10 @@ if __name__ == '__main__':
     parser.add_argument("-test_from", default=None, type=str)
     args = parser.parse_args()
 
-    # args.task = 'make_data'
     # args.n_cpus = 32
 
     # now = time.strftime('%m%d_%H%M')
-    now = "lstm_generator"
+    now = "lstm_generator_layer_1"
     # now = "lstm"
 
 
@@ -101,7 +100,7 @@ if __name__ == '__main__':
         -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50
         -max_pos 512 -min_length 20 -max_length 100 -alpha 0.9
         """
-        os.system(f"python train.py -task ext -mode validate -test_all True"
+        os.system(f"python train.py -task ext -mode validate"
             + f" -model_path {MODEL_DIR}/{args.model_path}"
             + f" -bert_data_path {BERT_DATA_DIR}/valid_ext"
             + f" -result_path {RESULT_DIR}/result_{args.model_path}"
