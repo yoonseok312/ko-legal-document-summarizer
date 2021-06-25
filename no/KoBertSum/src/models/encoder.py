@@ -85,7 +85,6 @@ class ExtTransformerEncoder(nn.Module):
         self.wo = nn.Linear(d_model, 1, bias=True)
         self.sigmoid = nn.Sigmoid()
 
-
     def forward(self, top_vecs, mask):
         """ See :obj:`EncoderBase.forward()`"""
 

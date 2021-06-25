@@ -124,8 +124,8 @@ def validate_ext(args, device_id):
             test_ext(args, device_id, cp, step)
     else:
         while (True):
-            cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
-            # cp_files = glob.glob(os.path.join(args.model_path, 'model_step_3000.pt'))
+            # cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+            cp_files = glob.glob(os.path.join(args.model_path, 'model_step_1000.pt'))
             cp_files.sort(key=os.path.getmtime)
             if (cp_files):
                 cp = cp_files[-1]

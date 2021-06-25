@@ -178,6 +178,7 @@ class ExtSummarizer(nn.Module):
 
         self.to(device)
 
+
     def forward(self, src, segs, clss, mask_src, mask_cls):
         top_vec = self.bert(src, segs, mask_src)
         sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
