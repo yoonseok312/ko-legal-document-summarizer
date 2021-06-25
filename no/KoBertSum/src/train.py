@@ -44,7 +44,7 @@ RESULT_DIR = f'{PROJECT_DIR}/{PROBLEM}/results'
 if __name__ == '__main__':
 
     os.system(f"""\
-                python train.py -task ext -mode test \
+                python train.py -task ext -mode train \
                 -test_from {MODEL_DIR}/1209_1237/model_step_6000.pt \
                 -bert_data_path {BERT_DATA_DIR}/test \
                 -result_path {RESULT_DIR}/result_1209_1237 \
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
-    parser.add_argument("-mode", default='test', type=str, choices=['train', 'validate', 'test'])
+    parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test'])
     parser.add_argument("-bert_data_path", default='/tmp/pycharm_project_138/no/KoBertSum/ext/data/bert_data/test')
     parser.add_argument("-model_path", default='../models/')
     parser.add_argument("-result_path", default=f'{RESULT_DIR}/result_1209_1237')
