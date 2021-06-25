@@ -8,8 +8,8 @@ import argparse
 PROBLEM = 'ext'
 
 ## 사용할 path 정의
-PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
-# PROJECT_DIR = os.getcwd()
+# PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
+PROJECT_DIR = os.getcwd()
 print(PROJECT_DIR)
 
 DATA_DIR = f'{PROJECT_DIR}/{PROBLEM}/data'
