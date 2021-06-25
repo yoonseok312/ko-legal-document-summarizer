@@ -71,6 +71,7 @@ class TransformerEncoderLayer(nn.Module):
 
 
 class ExtTransformerEncoder(nn.Module):
+
     def __init__(self, d_model, d_ff, heads, dropout, num_inter_layers=0):
         super(ExtTransformerEncoder, self).__init__()
         self.d_model = d_model

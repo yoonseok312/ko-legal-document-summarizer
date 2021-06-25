@@ -43,6 +43,7 @@ if __name__ == '__main__':
     now = "lstm_generator"
     # now = "lstm"
 
+
     # python main.py -task install
     if args.task == 'install':
         os.chdir(PROJECT_DIR)
