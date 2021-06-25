@@ -8,8 +8,8 @@ import argparse
 PROBLEM = 'ext'
 
 ## 사용할 path 정의
-# PROJECT_DIR = '/tmp/pycharm_project_138/no/KoBertSum'
-PROJECT_DIR = os.getcwd()
+PROJECT_DIR = '/tmp/pycharm_project_138/no/KoBertSum'
+# PROJECT_DIR = os.getcwd()
 print(PROJECT_DIR)
 
 DATA_DIR = f'{PROJECT_DIR}/{PROBLEM}/data'
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument("-n_cpus", default='32', type=str)
     parser.add_argument("-target_summary_sent", default='abs', type=str)
     parser.add_argument("-visible_gpus", default='0', type=str)
-    
+
     parser.add_argument("-train_from", default=None, type=str)
     parser.add_argument("-model_path", default=None, type=str)
     parser.add_argument("-test_from", default=None, type=str)
@@ -58,7 +58,7 @@ if __name__ == '__main__':
         os.system(f"python make_data.py -task test_bert -n_cpus {args.n_cpus}")
 
     # python main.py -task train -target_summary_sent abs -visible_gpus 0
-    # python main.py -task train -target_summary_sent abs -visible_gpus 0 -train_from 1209_1236/model_step_7000.pt 
+    # python main.py -task train -target_summary_sent abs -visible_gpus 0 -train_from 1209_1236/model_step_7000.pt
     elif args.task == 'train':
         """
         파라미터별 설명은 trainer_ext 참고
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         param2 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 1000 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 512"
         param3 = " -ext_dropout 0.1 -max_pos 512 -lr 2e-3 -warmup_steps 10000 -batch_size 3000 -accum_count 2 -train_steps 20000  -use_interval true"
         do_str += param3
-  
+
         if args.train_from is None:
             os.system(f'mkdir {MODEL_DIR}/{now}')
             do_str += f" -model_path {MODEL_DIR}/{now}"  \
@@ -93,11 +93,11 @@ if __name__ == '__main__':
     elif args.task == 'valid':
         os.chdir(PROJECT_DIR + '/src')
         """
-        python train.py -task ext -mode validate -batch_size 3000 -test_batch_size 500 
-        -bert_data_path BERT_DATA_PATH -log_file ../logs/val_abs_bert_cnndm -model_path MODEL_PATH -result_path ../logs/abs_bert_cnndm 
+        python train.py -task ext -mode validate -batch_size 3000 -test_batch_size 500
+        -bert_data_path BERT_DATA_PATH -log_file ../logs/val_abs_bert_cnndm -model_path MODEL_PATH -result_path ../logs/abs_bert_cnndm
         -sep_optim true -use_interval true -visible_gpus 0,1
-        -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50 
-        -max_pos 512 -min_length 20 -max_length 100 -alpha 0.9 
+        -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50
+        -max_pos 512 -min_length 20 -max_length 100 -alpha 0.9
         """
         os.system(f"python train.py -task ext -mode validate -test_all True"
             + f" -model_path {MODEL_DIR}/{args.model_path}"
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     # python main.py -task test -test_from 1209_1236/model_step_7000.pt -visible_gpus 0
     elif args.task == 'test':
         os.chdir(PROJECT_DIR + '/src')
-        
+
         model_folder, model_name = args.test_from.rsplit('/', 1)
         model_name = model_name.split('_', 1)[1].split('.')[0]
         os.system(f"""\
@@ -131,7 +131,7 @@ if __name__ == '__main__':
         """)
         # -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50 \
         # -report_rouge True  \
-        #  -model_path {MODEL_DIR} 
+        #  -model_path {MODEL_DIR}
         # args.max_tgt_len=140  이거 수정해도 효과가 거의 없음
 
         os.system(f"python make_submission.py result_{model_folder}_{model_name}_num.csv")

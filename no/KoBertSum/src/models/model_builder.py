@@ -143,6 +143,13 @@ class ExtSummarizer(nn.Module):
 
         self.ext_layer = ExtTransformerEncoder(self.bert.model.config.hidden_size, args.ext_ff_size, args.ext_heads,
                                                args.ext_dropout, args.ext_layers)
+
+        self.lstm_layer = nn.LSTM(
+            input_size=self.bert.model.config.hidden_size, hidden_size=self.bert.model.config.hidden_size
+        )
+        self.wo = nn.Linear(self.bert.model.config.hidden_size, 1, bias=True)
+        self.sigmoid = nn.Sigmoid()
+
         if (args.encoder == 'baseline'):
             bert_config = BertConfig(self.bert.model.config.vocab_size, hidden_size=args.ext_hidden_size,
                                      num_hidden_layers=args.ext_layers, num_attention_heads=args.ext_heads, intermediate_size=args.ext_ff_size)
@@ -173,8 +180,14 @@ class ExtSummarizer(nn.Module):
         top_vec = self.bert(src, segs, mask_src)
         sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
         sents_vec = sents_vec * mask_cls[:, :, None].float()
-        sent_scores = self.ext_layer(sents_vec, mask_cls).squeeze(-1)
-        return sent_scores, mask_cls
+        sent_scores = self.ext_layer(sents_vec, mask_cls) # .squeeze(-1)
+        sent_scores_lstm, _ = self.lstm_layer(
+            sent_scores
+        )
+        sent_scores_lstm2 = self.sigmoid(self.wo(sent_scores_lstm))
+        sent_scores_lstm3 = sent_scores_lstm2.squeeze(-1) * mask_cls.float()
+        sent_scores_lstm4 = sent_scores_lstm3.squeeze(-1)
+        return sent_scores_lstm4, mask_cls
 
 
 class AbsSummarizer(nn.Module):

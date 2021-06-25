@@ -22,17 +22,47 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
+PROBLEM = 'ext'
+
+## 사용할 path 정의
+PROJECT_DIR = '/tmp/pycharm_project_138/no/KoBertSum'
+# PROJECT_DIR = os.getcwd()
+print(PROJECT_DIR)
+
+DATA_DIR = f'{PROJECT_DIR}/{PROBLEM}/data'
+RAW_DATA_DIR = DATA_DIR + '/raw'
+JSON_DATA_DIR = DATA_DIR + '/json_data'
+BERT_DATA_DIR = DATA_DIR + '/bert_data'
+LOG_DIR = f'{PROJECT_DIR}/{PROBLEM}/logs'
+LOG_PREPO_FILE = LOG_DIR + '/preprocessing.log'
+
+MODEL_DIR = f'{PROJECT_DIR}/{PROBLEM}/models'
+RESULT_DIR = f'{PROJECT_DIR}/{PROBLEM}/results'
 
 
 
 if __name__ == '__main__':
+
+    os.system(f"""\
+                python train.py -task ext -mode train \
+                -test_from {MODEL_DIR}/1209_1237/model_step_6000.pt \
+                -bert_data_path {BERT_DATA_DIR}/test \
+                -result_path {RESULT_DIR}/result_1209_1237 \
+                -log_file {LOG_DIR}/test_1209_1237.log \
+                -test_batch_size 1  -batch_size 3000 \
+                -sep_optim true -use_interval true -visible_gpus 0 \
+                -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50 \
+                -report_rouge False \
+                -max_tgt_len 100
+            """)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
     parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test'])
-    parser.add_argument("-bert_data_path", default='../bert_data_new/cnndm')
+    parser.add_argument("-bert_data_path", default='/tmp/pycharm_project_138/no/KoBertSum/ext/data/bert_data/test')
     parser.add_argument("-model_path", default='../models/')
-    parser.add_argument("-result_path", default='../results/cnndm')
+    parser.add_argument("-result_path", default=f'{RESULT_DIR}/result_1209_1237')
     parser.add_argument("-temp_dir", default='../temp')
 
     parser.add_argument("-batch_size", default=140, type=int)
@@ -98,11 +128,11 @@ if __name__ == '__main__':
 
     parser.add_argument('-visible_gpus', default='-1', type=str)
     parser.add_argument('-gpu_ranks', default='0', type=str)
-    parser.add_argument('-log_file', default='../logs/cnndm.log')
+    parser.add_argument('-log_file', default='../ext/logs/test_1209_1237.log')
     parser.add_argument('-seed', default=666, type=int)
 
     parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=False)
-    parser.add_argument("-test_from", default='')
+    parser.add_argument("-test_from", default=f'{MODEL_DIR}/1209_1237/model_step_6000.pt')
     parser.add_argument("-test_start_from", default=-1, type=int)
 
     parser.add_argument("-train_from", default='')
