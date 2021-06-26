@@ -42,9 +42,9 @@ PRETRAINED_VOCAB_FILES_MAP = {
 }
 
 PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
-    "monologg/kobert": 512,
-    "monologg/kobert-lm": 512,
-    "monologg/distilkobert": 512
+    "monologg/kobert": 2304, # 512
+    "monologg/kobert-lm": 2304, # 512
+    "monologg/distilkobert": 2304 # 512
 }
 
 PRETRAINED_INIT_CONFIGURATION = {

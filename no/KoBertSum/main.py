@@ -72,9 +72,9 @@ if __name__ == '__main__':
             + f" -bert_data_path {BERT_DATA_DIR}/train_{args.target_summary_sent}"  \
             + f" -save_checkpoint_steps 1000 -visible_gpus {args.visible_gpus} -report_every 50"
 
-        param1 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 500 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 512"
-        param2 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 1000 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 512"
-        param3 = " -ext_dropout 0.1 -max_pos 512 -lr 2e-3 -warmup_steps 10000 -batch_size 3000 -accum_count 2 -train_steps 15000  -use_interval true"
+        param1 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 500 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 2304"
+        param2 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 1000 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 2304"
+        param3 = " -ext_dropout 0.1 -max_pos 2304 -lr 2e-3 -warmup_steps 10000 -batch_size 3000 -accum_count 2 -train_steps 15000  -use_interval true"
         do_str += param3
 
         if args.train_from is None:
@@ -97,8 +97,8 @@ if __name__ == '__main__':
         python train.py -task ext -mode validate -batch_size 3000 -test_batch_size 500
         -bert_data_path BERT_DATA_PATH -log_file ../logs/val_abs_bert_cnndm -model_path MODEL_PATH -result_path ../logs/abs_bert_cnndm
         -sep_optim true -use_interval true -visible_gpus 0,1
-        -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50
-        -max_pos 512 -min_length 20 -max_length 100 -alpha 0.9
+        -max_pos 2304 -max_length 200 -alpha 0.95 -min_length 50
+        -max_pos 2304 -min_length 20 -max_length 100 -alpha 0.9
         """
         os.system(f"python train.py -task ext -mode validate"
             + f" -model_path {MODEL_DIR}/{args.model_path}"
@@ -107,7 +107,7 @@ if __name__ == '__main__':
             + f" -log_file {LOG_DIR}/valid_{args.model_path}.log"
             + f" -test_batch_size 500  -batch_size 3000"
             + f" -sep_optim true -use_interval true -visible_gpus {args.visible_gpus}"
-            + f" -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50"
+            + f" -max_pos 2304 -max_length 200 -alpha 0.95 -min_length 4"
             + f" -report_rouge False"
             + f" -max_tgt_len 100"
         )

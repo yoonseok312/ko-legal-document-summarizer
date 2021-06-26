@@ -43,9 +43,8 @@ RESULT_DIR = f'{PROJECT_DIR}/{PROBLEM}/results'
 
 if __name__ == '__main__':
 
-
     # os.system(f"""\
-    #             python train.py -task ext -mode train \
+    #             python3 train.py -task ext -mode validate \
     #             -test_from {MODEL_DIR}/1209_1237/model_step_6000.pt \
     #             -bert_data_path {BERT_DATA_DIR}/test \
     #             -result_path {RESULT_DIR}/result_1209_1237 \
@@ -60,7 +59,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
-    parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test'])
+    parser.add_argument("-mode", default='validate', type=str, choices=['train', 'validate', 'test'])
     parser.add_argument("-bert_data_path", default='/tmp/pycharm_project_581/no/KoBertSum/ext/data/bert_data/train_ext')
     parser.add_argument("-model_path", default='../models/')
     parser.add_argument("-result_path", default=f'{RESULT_DIR}/result_1209_1237')
@@ -69,7 +68,7 @@ if __name__ == '__main__':
     parser.add_argument("-batch_size", default=140, type=int)
     parser.add_argument("-test_batch_size", default=200, type=int)
 
-    parser.add_argument("-max_pos", default=512, type=int)
+    parser.add_argument("-max_pos", default=2304, type=int)
     parser.add_argument("-use_interval", type=str2bool, nargs='?',const=True,default=True)
     parser.add_argument("-large", type=str2bool, nargs='?',const=True,default=False)
     parser.add_argument("-load_from_extractive", default='', type=str)
@@ -87,8 +86,8 @@ if __name__ == '__main__':
     parser.add_argument("-dec_hidden_size", default=768, type=int)
     parser.add_argument("-dec_heads", default=8, type=int)
     parser.add_argument("-dec_ff_size", default=2048, type=int)
-    parser.add_argument("-enc_hidden_size", default=512, type=int)
-    parser.add_argument("-enc_ff_size", default=512, type=int)
+    parser.add_argument("-enc_hidden_size", default=2304, type=int)
+    parser.add_argument("-enc_ff_size", default=2304, type=int)
     parser.add_argument("-enc_dropout", default=0.2, type=float)
     parser.add_argument("-enc_layers", default=6, type=int)
 
@@ -103,7 +102,7 @@ if __name__ == '__main__':
     parser.add_argument("-generator_shard_size", default=32, type=int)
     parser.add_argument("-alpha",  default=0.6, type=float)
     parser.add_argument("-beam_size", default=5, type=int)
-    parser.add_argument("-min_length", default=15, type=int)
+    parser.add_argument("-min_length", default=4, type=int)
     parser.add_argument("-max_length", default=150, type=int)
     parser.add_argument("-max_tgt_len", default=140, type=int)
 

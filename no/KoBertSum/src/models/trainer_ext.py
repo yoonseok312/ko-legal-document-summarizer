@@ -194,11 +194,37 @@ class Trainer(object):
         self.model.eval()
         stats = Statistics()
 
+        final_idx = []
+        all_labels = []
 
         with torch.no_grad():
+            total_count = 0
+            error_count = 0
             for batch in valid_iter:
                 src = batch.src
                 labels = batch.src_sent_labels
+                count = 0
+
+                for i in range(batch.batch_size):
+                    total_count += 1
+                    count = 0
+                    for j in range(batch.clss.size(1)):
+                        if labels[i][j] == 1:
+                            count += 1
+                    if count == 3:
+                        continue
+                    else:
+                        error_count += 1
+                        print("error", labels[i])
+
+
+
+
+
+                all_labels.extend([[j for j in range(batch.clss.size(1)) if labels[i][j] == 1] for i in
+                                   range(batch.batch_size)])
+                print(batch.clss.size(1))
+
                 segs = batch.segs
                 clss = batch.clss
                 mask = batch.mask_src
@@ -212,10 +238,60 @@ class Trainer(object):
                 # print("labels:", labels.float())
                 loss = self.loss(sent_scores, labels.float())
                 loss = (loss * mask.float()).sum()
+
+                sent_scores = sent_scores + mask.float()
+                sent_scores = sent_scores.cpu().data.numpy()
+                # print(sent_scores)
+                selected_ids = np.argsort(-sent_scores, 1)
+
+                for i, idx in enumerate(selected_ids):
+                    batch_selected_idx = []
+                    _pred = []
+                    _pred_idx = []
+                    if (len(batch.src_str[i]) == 0):
+                        continue
+                    for j in selected_ids[i][:len(batch.src_str[i])]:
+                        if (j >= len(batch.src_str[i])):
+                            continue
+                        # _pred_idx.append(j)
+                        batch_selected_idx.append(j)
+
+                        if len(batch_selected_idx) == 3:
+                            break
+
+                    # if len(_pred) < 3:
+                    #     # print(_pred)
+                    #     #print('selected_ids: ', selected_ids)
+                    #     # print('batch.src_str[i]: ', batch.src_str[i])
+                    #     # print('selected_ids[i]: ', selected_ids[i])
+                    #     _pred = np.array(batch.src_str[i])[selected_ids[i][:3]]
+                    #     # print(_pred)
+
+                    if len(batch_selected_idx) < 3:
+                        # print(batch_selected_idx)
+                        # print('selected_ids: ', selected_ids)
+                        # print('batch.src_str[i]: ', batch.src_str[i])
+                        # print('selected_ids[i]: ', selected_ids[i])
+                        batch_selected_idx = selected_ids[i][:3]
+                        # print(batch_selected_idx)
+
+
+                    # _pred = '<q>'.join(_pred)
+                    # if (self.args.recall_eval):
+                    #     _pred = ' '.join(_pred.split()[:len(batch.tgt_str[i].split())])
+
+                    # pred.append(_pred)
+                    # pred_idx.append(_pred_idx)
+                    # gold.append(batch.tgt_str[i])
+                    final_idx.append(batch_selected_idx)
+
                 batch_stats = Statistics(float(loss.cpu().data.numpy()), len(labels))
                 stats.update(batch_stats)
+            print(error_count, total_count)
             self._report_step(0, step, valid_stats=stats)
-            return stats
+            print(len(final_idx))
+            print(len(all_labels))
+            return stats, final_idx, all_labels
 
     def test(self, test_iter, step, cal_lead=False, cal_oracle=False):
         """ Validate model.
@@ -392,6 +468,7 @@ class Trainer(object):
         
         with torch.no_grad():
             for batch in test_iter:
+                print(batch)
                 src = batch.src
                 labels = batch.src_sent_labels
                 segs = batch.segs
@@ -465,6 +542,8 @@ class Trainer(object):
                     pred_idx.append(_pred_idx)
                     gold.append(batch.tgt_str[i])
                     final_idx.append(batch_selected_idx)
+            print(final_idx)
+            print(all_labels)
 
         # TODO 1. using this function (maybe in test_ext())
         # TODO 2. get answer extractive label(ex. [0, 1, 2]) -> in this function? or in other function?
