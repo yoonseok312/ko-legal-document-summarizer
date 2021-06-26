@@ -131,7 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('-log_file', default='../ext/logs/test_1209_1237.log')
     parser.add_argument('-seed', default=666, type=int)
 
-    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=False)
+    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=True)
     parser.add_argument("-test_from", default=f'{MODEL_DIR}/1209_1237/model_step_6000.pt')
     parser.add_argument("-test_start_from", default=-1, type=int)
 
