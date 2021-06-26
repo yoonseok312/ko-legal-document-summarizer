@@ -183,19 +183,21 @@ class ExtSummarizer(nn.Module):
         top_vec = self.bert(src, segs, mask_src)
         sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
         sents_vec = sents_vec * mask_cls[:, :, None].float()
-        sent_scores, lstm_sent_scores = self.ext_layer(sents_vec, mask_cls) # .squeeze(-
+        sent_scores, add_lstm = self.ext_layer(sents_vec, mask_cls) # .squeeze(-
 
-        # if add_lstm:
-        sent_scores_lstm, _ = self.lstm_layer(
-            lstm_sent_scores
-        )
-        sent_scores_lstm2 = self.sigmoid(self.wo(sent_scores_lstm))
+        if add_lstm:
+            sent_scores_lstm, _ = self.lstm_layer(
+                sent_scores
+            )
+            sent_scores_lstm2 = self.sigmoid(self.wo(sent_scores_lstm))
         # sent_scores_lstm2 = self.generator(sent_scores_lstm)
-        sent_scores_lstm3 = sent_scores_lstm2.squeeze(-1) * mask_cls.float()
-        sent_scores_lstm4 = sent_scores_lstm3.squeeze(-1)
+            sent_scores_lstm3 = sent_scores_lstm2.squeeze(-1) * mask_cls.float()
+            sent_scores_lstm4 = sent_scores_lstm3.squeeze(-1)
+            return sent_scores_lstm4, mask_cls
         # generator_output = self.generator(sent_scores_lstm4)
-        final_sent_scores = sent_scores_lstm4 * 0.3 + sent_scores * 0.7
-        return final_sent_scores, mask_cls
+        else:
+            # final_sent_scores = sent_scores_lstm4 * 0.3 + sent_scores * 0.7
+            return sent_scores, mask_cls
 
         # else:
         #     return sent_scores, mask_cls
