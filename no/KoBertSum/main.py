@@ -1,15 +1,13 @@
 import os
 import sys
 import time
+import datetime
 import argparse
-#from src.others.test_rouge_score import RougeScorer
-# sys.path.append('/tmp/pycharm_project_138/no/KoBertSum')
 
 PROBLEM = 'ext'
 
-## 사용할 path 정의
-PROJECT_DIR = '/tmp/pycharm_project_138/no/KoBertSum'
-# PROJECT_DIR = os.getcwd()
+#Define path
+PROJECT_DIR = os.getcwd()
 print(PROJECT_DIR)
 
 DATA_DIR = f'{PROJECT_DIR}/{PROBLEM}/data'
@@ -27,8 +25,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-task", default='test', type=str, choices=['install', 'make_data', 'train', 'valid', 'test'])
-    parser.add_argument("-n_cpus", default='32', type=str)
-    parser.add_argument("-target_summary_sent", default='abs', type=str)
+    parser.add_argument("-n_cpus", default='8', type=str)
+    parser.add_argument("-target_summary_sent", default='ext', type=str)
     parser.add_argument("-visible_gpus", default='0', type=str)
 
     parser.add_argument("-train_from", default=None, type=str)
@@ -40,7 +38,7 @@ if __name__ == '__main__':
     # args.n_cpus = 32
 
     # now = time.strftime('%m%d_%H%M')
-    now = "lstm"
+    now = datetime.datetime.now().strftime("%m%d_%H%M")
 
     # python main.py -task install
     if args.task == 'install':
@@ -69,7 +67,7 @@ if __name__ == '__main__':
         # python train.py  -task abs -mode train -train_from /kaggle/input/absbert-weights/model_step_149000.pt -bert_data_path /kaggle/working/bert_data/news  -dec_dropout 0.2  -model_path /kaggle/working/bertsumextabs -sep_optim true -lr_bert 0.002 -lr_dec 0.02 -save_checkpoint_steps 1000 -batch_size 140 -train_steps 150000 -report_every 100 -accum_count 5 -use_bert_emb true -use_interval true -warmup_steps_bert 1000 -warmup_steps_dec 500 -max_pos 512 -visible_gpus 0  -temp_dir /kaggle/working/temp -log_file /kaggle/working/logs/abs_bert_cnndm
         do_str = f"python train.py -task ext -mode train"  \
             + f" -bert_data_path {BERT_DATA_DIR}/train_{args.target_summary_sent}"  \
-            + f" -save_checkpoint_steps 500 -visible_gpus {args.visible_gpus} -report_every 50"
+            + f" -save_checkpoint_steps 1000 -visible_gpus {args.visible_gpus} -report_every 50"
 
         param1 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 500 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 512"
         param2 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 1000 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 512"
@@ -135,11 +133,3 @@ if __name__ == '__main__':
         # args.max_tgt_len=140  이거 수정해도 효과가 거의 없음
 
         os.system(f"python make_submission.py result_{model_folder}_{model_name}_num.csv")
-
-    elif args.task == 'rouge':
-        pass
-        # rouge_scorer = RougeScorer()
-        # str_scores = rouge_scorer.compute_rouge(ref_df, hyp_df)
-        # rouge_scorer.save_rouge_scores(str_scores)
-        # rouge_scorer.format_rouge_scores(rouge_scorer.scores)
-
