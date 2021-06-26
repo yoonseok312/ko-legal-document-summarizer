@@ -201,13 +201,44 @@ class DataIterator(object):
         clss = ex['clss']
         src_txt = ex['src_txt']
         tgt_txt = ex['tgt_txt']
+        clss.append(len(src))
 
-        end_id = [src[-1]]
-        src = src[:-1][:self.args.max_pos - 1] + end_id
-        segs = segs[:self.args.max_pos]
-        max_sent_id = bisect.bisect_left(clss, self.args.max_pos)
-        src_sent_labels = src_sent_labels[:max_sent_id]
-        clss = clss[:max_sent_id]
+        if len(segs) > self.args.max_pos:
+            bins = len(clss) - 1
+            counts = [2 for _ in range(bins)]
+            tot_cnt = bins * 2
+            cur_idx = 0
+            while tot_cnt < self.args.max_pos:
+                if counts[cur_idx] < clss[cur_idx+1] - clss[cur_idx]:
+                    counts[cur_idx] += 1
+                    tot_cnt += 1
+                cur_idx += 1
+                if cur_idx == bins:
+                    cur_idx = 0
+            indices = []
+            for i in range(bins):
+                indices.extend([clss[i]] + sorted(random.sample(list(range(clss[i]+1, clss[i+1]-1)), counts[i]-2)) + [clss[i+1]-1])
+            new_src = []
+            new_segs = []
+            for i in indices:
+                new_src.append(src[i])
+                new_segs.append(segs[i])
+            new_clss = [0]
+            for i in range(bins):
+                x = new_clss[-1] + counts[i]
+                new_clss.append(x)
+            src = new_src
+            segs = new_segs
+            clss = new_clss[:-1]
+            print(new_clss)
+
+        # some old logics...
+        # end_id = [src[-1]]
+        # src = src[:-1][:self.args.max_pos - 1] + end_id
+        # segs = segs[:self.args.max_pos]
+        # max_sent_id = bisect.bisect_left(clss, self.args.max_pos)
+        # src_sent_labels = src_sent_labels[:max_sent_id]
+        # clss = clss[:max_sent_id]
         # src_txt = src_txt[:max_sent_id]
 
 
