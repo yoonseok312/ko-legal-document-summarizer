@@ -145,7 +145,7 @@ class Bert(nn.Module):
     BERT model : Bidirectional Encoder Representations from Transformers.
     """
 
-    def __init__(self, large, temp_dir, finetune=False, hidden=256, n_layers=8, attn_heads=8, vocab_size=768, dropout=0.1):
+    def __init__(self, large, temp_dir, finetune=False, hidden=256, n_layers=8, attn_heads=8, vocab_size=363426, dropout=0.1):
         """
         :param vocab_size: vocab_size of total words
         :param hidden: BERT model hidden size
@@ -155,7 +155,7 @@ class Bert(nn.Module):
         """
 
         super().__init__()
-        print(attn_heads, hidden)
+        print(vocab_size, hidden, n_layers, attn_heads, dropout)
         self.model = BERT(vocab_size, hidden, n_layers, attn_heads, dropout)
         print(os.getcwd())
         self.model.load_state_dict(torch.load('models/bert.model.ep0'))
@@ -206,15 +206,15 @@ class ExtSummarizer(nn.Module):
         self.device = device
         self.bert = Bert(args.large, args.temp_dir, args.finetune_bert)
 
-        self.ext_layer = ExtTransformerEncoder(2304, args.ext_ff_size, args.ext_heads,
+        self.ext_layer = ExtTransformerEncoder(256, args.ext_ff_size, args.ext_heads,
                                                args.ext_dropout, args.ext_layers)
 
         self.lstm_layer = nn.LSTM(
-            input_size=2304, hidden_size=2304
+            input_size=256, hidden_size=256
         )
-        self.wo = nn.Linear(2304, 1, bias=True)
+        self.wo = nn.Linear(256, 1, bias=True)
         self.sigmoid = nn.Sigmoid()
-        self.generator = Generator(2304)
+        self.generator = Generator(256)
 
         if (args.encoder == 'baseline'):
             bert_config = BertConfig(self.bert.model.config.vocab_size, hidden_size=args.ext_hidden_size,

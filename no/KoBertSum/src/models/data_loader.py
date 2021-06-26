@@ -211,7 +211,7 @@ class DataIterator(object):
         if(not self.args.use_interval):
             segs=[0]*len(segs)
         clss = ex['clss']
-        print("clss", clss)
+        # print("clss", clss)
         src_txt = ex['src_txt']
         tgt_txt = ex['tgt_txt']
 
@@ -268,7 +268,7 @@ class DataIterator(object):
                     if sum(minibatch[i][4]) < 3:
                         count += 1
                         print("fatal error 2")
-                print("fatal count", count)
+                # print("fatal count", count)
                 minibatch, size_so_far = minibatch[-1:], self.batch_size_fn(ex, 1)
         if minibatch:
             yield minibatch

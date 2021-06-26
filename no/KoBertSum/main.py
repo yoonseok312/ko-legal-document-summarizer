@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # args.n_cpus = 32
 
     # now = time.strftime('%m%d_%H%M')
-    now = "lstm_15"
+    now = "lstm_bert"
     # now = "lstm"
 
 
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
         do_str = f"python train.py -task ext -mode train"  \
             + f" -bert_data_path {BERT_DATA_DIR}/train_{args.target_summary_sent}"  \
-            + f" -save_checkpoint_steps 1000 -visible_gpus {args.visible_gpus} -report_every 50"
+            + f" -save_checkpoint_steps 500 -visible_gpus {args.visible_gpus} -report_every 50"
 
         param1 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 500 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 2304"
         param2 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 1000 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 2304"
