@@ -161,6 +161,21 @@ class Trainer(object):
                         normalization = 0
                         if (step % self.save_checkpoint_steps == 0 and self.gpu_rank == 0):
                             self._save(step)
+                            # device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
+                            # device_id = 0 if device == "cuda" else -1
+                  #           os.chdir(PROJECT_DIR + '/src')
+                  #           os.system(f"python train.py -task ext -mode train_valid"
+                  # + f" -model_path {MODEL_DIR}/{args.model_path}"
+                  # + f" -bert_data_path {BERT_DATA_DIR}/valid_ext"
+                  # + f" -result_path {RESULT_DIR}/result_{args.model_path}"
+                  # + f" -log_file {LOG_DIR}/valid_{args.model_path}.log"
+                  # + f" -test_batch_size 500  -batch_size 3000"
+                  # + f" -sep_optim true -use_interval true -visible_gpus {args.visible_gpus}"
+                  # + f" -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50"
+                  # + f" -report_rouge False"
+                  # + f" -max_tgt_len 100"
+                  # )
+                            # call validate_ext
 
                         step += 1
                         if step > train_steps:

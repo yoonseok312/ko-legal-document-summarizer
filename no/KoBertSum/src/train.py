@@ -8,7 +8,7 @@ import argparse
 import os
 from others.logging import init_logger
 #from train_abstractive import validate_abs, train_abs, baseline, test_abs, test_text_abs
-from train_extractive import train_ext, validate_ext, test_ext
+from train_extractive import train_ext, validate_ext, test_ext, train_validate_ext
 
 model_flags = ['hidden_size', 'ff_size', 'heads', 'emb_size', 'enc_layers', 'enc_hidden_size', 'enc_ff_size',
                'dec_layers', 'dec_hidden_size', 'dec_ff_size', 'encoder', 'ff_actv', 'use_interval']
@@ -131,8 +131,8 @@ if __name__ == '__main__':
     parser.add_argument('-log_file', default='../ext/logs/test_1209_1237.log')
     parser.add_argument('-seed', default=666, type=int)
 
-    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=True)
-    parser.add_argument("-test_from", default=f'{MODEL_DIR}/1209_1237/model_step_6000.pt')
+    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=False)
+    # parser.add_argument("-test_from", default=f'{MODEL_DIR}/1209_1237/model_step_6000.pt')
     parser.add_argument("-test_start_from", default=-1, type=int)
 
     parser.add_argument("-train_from", default='')
@@ -179,6 +179,8 @@ if __name__ == '__main__':
             train_ext(args, device_id)
         elif (args.mode == 'validate'):
             validate_ext(args, device_id)
+        elif (args.mode == 'train_valid'):
+            train_validate_ext(args, device_id)
         if (args.mode == 'test'):
             cp = args.test_from
             try:

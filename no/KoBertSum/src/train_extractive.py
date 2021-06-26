@@ -149,6 +149,35 @@ def validate_ext(args, device_id):
             else:
                 time.sleep(300)
 
+def train_validate_ext(step, args, device_id):
+    timestep = 0
+    # cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+    checkpoint_path = os.path.join(args.model_path, 'model_step_%d.pt' % step)
+    cp_files = glob.glob(os.path.join(args.model_path, 'model_step_500.pt'))
+    cp_files.sort(key=os.path.getmtime)
+    if (cp_files):
+        cp = cp_files[-1]
+        time_of_cp = os.path.getmtime(cp)
+        if (not os.path.getsize(cp) > 0):
+            print("sleeping 60 sec...")
+            time.sleep(60)
+        if (time_of_cp > timestep):
+            timestep = time_of_cp
+            step = int(cp.split('.')[-2].split('_')[-1])
+            validate(args, device_id, cp, step)
+            test_ext(args, device_id, cp, step)
+
+    cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+    cp_files.sort(key=os.path.getmtime)
+    if (cp_files):
+        cp = cp_files[-1]
+        time_of_cp = os.path.getmtime(cp)
+        # if (time_of_cp > timestep):
+        #     continue
+    else:
+        print("sleeping 300 sec...")
+        time.sleep(300)
+
 
 def validate(args, device_id, pt, step):
     device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"

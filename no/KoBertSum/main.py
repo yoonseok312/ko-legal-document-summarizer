@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # args.n_cpus = 32
 
     # now = time.strftime('%m%d_%H%M')
-    now = "lstm_ensemble3"
+    now = "lstm_ensemble_0.7_0.3"
     # now = "lstm"
 
 
@@ -112,6 +112,26 @@ if __name__ == '__main__':
             + f" -max_tgt_len 100"
         )
 
+    elif args.task == 'train_valid':
+        os.chdir(PROJECT_DIR + '/src')
+        """
+        python train.py -task ext -mode validate -batch_size 3000 -test_batch_size 500
+        -bert_data_path BERT_DATA_PATH -log_file ../logs/val_abs_bert_cnndm -model_path MODEL_PATH -result_path ../logs/abs_bert_cnndm
+        -sep_optim true -use_interval true -visible_gpus 0,1
+        -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50
+        -max_pos 512 -min_length 20 -max_length 100 -alpha 0.9
+        """
+        os.system(f"python train.py -task ext -mode train_valid"
+                  + f" -model_path {MODEL_DIR}/{args.model_path}"
+                  + f" -bert_data_path {BERT_DATA_DIR}/valid_ext"
+                  + f" -result_path {RESULT_DIR}/result_{args.model_path}"
+                  + f" -log_file {LOG_DIR}/valid_{args.model_path}.log"
+                  + f" -test_batch_size 500  -batch_size 3000"
+                  + f" -sep_optim true -use_interval true -visible_gpus {args.visible_gpus}"
+                  + f" -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50"
+                  + f" -report_rouge False"
+                  + f" -max_tgt_len 100"
+                  )
     # python main.py -task test -test_from 1209_1236/model_step_7000.pt -visible_gpus 0
     elif args.task == 'test':
         os.chdir(PROJECT_DIR + '/src')
