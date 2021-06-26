@@ -351,6 +351,7 @@ class Trainer(object):
         stats = Statistics()
         
         final_idx = []
+        all_labels = []
         
         with torch.no_grad():
             for batch in test_iter:
@@ -364,6 +365,7 @@ class Trainer(object):
                 gold = []
                 pred = []
                 pred_idx = []
+                
 
                 if (cal_lead):
                     selected_ids = [list(range(batch.clss.size(1)))] * batch.batch_size
@@ -384,6 +386,8 @@ class Trainer(object):
                     selected_ids = np.argsort(-sent_scores, 1)
                     # print(selected_ids)
                 # selected_ids = np.sort(selected_ids,1)
+                all_labels.extend([[j for j in range(batch.clss.size(1)) if labels[i][j] == 1] for i in
+                                    range(batch.batch_size)])
                 for i, idx in enumerate(selected_ids):
                     batch_selected_idx = []
                     _pred = []
@@ -427,7 +431,7 @@ class Trainer(object):
 
         # TODO 1. using this function (maybe in test_ext())
         # TODO 2. get answer extractive label(ex. [0, 1, 2]) -> in this function? or in other function?
-        return final_idx
+        return final_idx, all_labels
 
     def _gradient_accumulation(self, true_batchs, normalization, total_stats,
                                report_stats):
