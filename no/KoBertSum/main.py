@@ -66,8 +66,7 @@ if __name__ == '__main__':
         """
         os.chdir(PROJECT_DIR + '/src')
 
-        # python train.py -task ext -mode train -bert_data_path BERT_DATA_PATH -ext_dropout 0.1 -model_path MODEL_PATH -lr 2e-3 -visible_gpus 0,1,2 -report_every 50 -save_checkpoint_steps 1000 -batch_size 3000 -train_steps 50000 -accum_count 2 -log_file ../logs/ext_bert_cnndm -use_interval true -warmup_steps 10000 -max_pos 512
-        # python train.py  -task abs -mode train -train_from /kaggle/input/absbert-weights/model_step_149000.pt -bert_data_path /kaggle/working/bert_data/news  -dec_dropout 0.2  -model_path /kaggle/working/bertsumextabs -sep_optim true -lr_bert 0.002 -lr_dec 0.02 -save_checkpoint_steps 1000 -batch_size 140 -train_steps 150000 -report_every 100 -accum_count 5 -use_bert_emb true -use_interval true -warmup_steps_bert 1000 -warmup_steps_dec 500 -max_pos 512 -visible_gpus 0  -temp_dir /kaggle/working/temp -log_file /kaggle/working/logs/abs_bert_cnndm
+
         do_str = f"python train.py -task ext -mode train"  \
             + f" -bert_data_path {BERT_DATA_DIR}/train_{args.target_summary_sent}"  \
             + f" -save_checkpoint_steps 1000 -visible_gpus {args.visible_gpus} -report_every 50"
@@ -107,7 +106,7 @@ if __name__ == '__main__':
             + f" -log_file {LOG_DIR}/valid_{args.model_path}.log"
             + f" -test_batch_size 500  -batch_size 3000"
             + f" -sep_optim true -use_interval true -visible_gpus {args.visible_gpus}"
-            + f" -max_pos 2304 -max_length 200 -alpha 0.95 -min_length 4"
+            + f" -max_pos 512 -max_length 200 -alpha 0.95 -min_length 4"
             + f" -report_rouge False"
             + f" -max_tgt_len 100"
         )

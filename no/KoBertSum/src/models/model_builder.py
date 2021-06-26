@@ -1,5 +1,5 @@
 import copy
-
+import os
 import torch
 import torch.nn as nn
 from transformers import BertModel, BertConfig
@@ -9,6 +9,9 @@ import torch.nn.functional as F
 from models.decoder import TransformerDecoder
 from models.encoder import Classifier, ExtTransformerEncoder
 from models.optimizers import Optimizer
+from models.BERTmodel.transformer import TransformerBlock
+from models.BERTmodel.embedding import BERTEmbedding
+from models.BERTmodel.bert import BERT
 
 def build_optim(args, model, checkpoint):
     """ Build optimizer """
@@ -113,26 +116,87 @@ def get_generator(vocab_size, dec_hidden_size, device):
 
     return generator
 
+# class Bert(nn.Module):
+#     def __init__(self, large, temp_dir, finetune=False):
+#         super(Bert, self).__init__()
+#         # if(large):
+#         #     self.model = BertModel.from_pretrained('bert-large-uncased', cache_dir=temp_dir)
+#         # else:
+#         self.model = BertModel.from_pretrained("monologg/kobert", cache_dir=temp_dir)
+#
+#         self.finetune = finetune
+#
+#     def forward(self, x, segs, mask):
+#         if(self.finetune):
+#             print("x", x.shape)
+#             print("token", segs.shape)
+#             print("mask", mask.shape)
+#             top_vec, _ = self.model(x, token_type_ids=segs, attention_mask=mask)
+#             #print(last_hiddens, last_pooling_hiddens, hiddens)
+#             #top_vec = hiddens[-1]
+#         else:
+#             self.eval()
+#             with torch.no_grad():
+#                 top_vec, _ = self.model(x, token_type_ids=segs, attention_mask=mask)
+#         return top_vec
+
 class Bert(nn.Module):
-    def __init__(self, large, temp_dir, finetune=False):
-        super(Bert, self).__init__()
-        # if(large):
-        #     self.model = BertModel.from_pretrained('bert-large-uncased', cache_dir=temp_dir)
-        # else:
-        self.model = BertModel.from_pretrained("monologg/kobert", cache_dir=temp_dir)
+    """
+    BERT model : Bidirectional Encoder Representations from Transformers.
+    """
+
+    def __init__(self, large, temp_dir, finetune=False, hidden=256, n_layers=8, attn_heads=8, vocab_size=768, dropout=0.1):
+        """
+        :param vocab_size: vocab_size of total words
+        :param hidden: BERT model hidden size
+        :param n_layers: numbers of Transformer blocks(layers)
+        :param attn_heads: number of attention heads
+        :param dropout: dropout rate
+        """
+
+        super().__init__()
+        print(attn_heads, hidden)
+        self.model = BERT(vocab_size, hidden, n_layers, attn_heads, dropout)
+        print(os.getcwd())
+        self.model.load_state_dict(torch.load('models/bert.model.ep0'))
+        # model.eval()
 
         self.finetune = finetune
+        self.hidden = hidden
+        self.n_layers = n_layers
+        self.attn_heads = attn_heads
 
-    def forward(self, x, segs, mask):
-        if(self.finetune):
-            top_vec, _ = self.model(x, token_type_ids=segs, attention_mask=mask)
-            #print(last_hiddens, last_pooling_hiddens, hiddens)
-            #top_vec = hiddens[-1]
+        # paper noted they used 4*hidden_size for ff_network_hidden_size
+        self.feed_forward_hidden = hidden * 4
+
+        # embedding for BERT, sum of positional, segment, token embeddings
+        self.embedding = BERTEmbedding(vocab_size=vocab_size, embed_size=hidden)
+
+        # multi-layers transformer blocks, deep network
+        self.transformer_blocks = nn.ModuleList(
+            [TransformerBlock(hidden, attn_heads, hidden * 4, dropout) for _ in range(n_layers)])
+        print(attn_heads, hidden)
+    def forward(self, x, segment_info, mask):
+        # attention masking for padded token
+        # torch.ByteTensor([batch_size, 1, seq_len, seq_len)
+        # mask = (x > 0).unsqueeze(1).repeat(1, x.size(1), 1).unsqueeze(1)
+
+        if self.finetune:
+        # embedding the indexed sequence to sequence of vectors
+        #     x = self.embedding(x, segment_info)
+        #
+        #     # running over multiple transformer blocks
+        #     for transformer in self.transformer_blocks:
+        #         x = transformer.forward(x, mask)
+        #
+        #     return x
+            top_vec = self.model(x, segment_info, mask)
+            return top_vec
         else:
             self.eval()
             with torch.no_grad():
-                top_vec, _ = self.model(x, token_type_ids=segs, attention_mask=mask)
-        return top_vec
+                top_vec = self.model(x, segment_info, mask)
+            return top_vec
 
 
 class ExtSummarizer(nn.Module):
@@ -142,15 +206,15 @@ class ExtSummarizer(nn.Module):
         self.device = device
         self.bert = Bert(args.large, args.temp_dir, args.finetune_bert)
 
-        self.ext_layer = ExtTransformerEncoder(self.bert.model.config.hidden_size, args.ext_ff_size, args.ext_heads,
+        self.ext_layer = ExtTransformerEncoder(2304, args.ext_ff_size, args.ext_heads,
                                                args.ext_dropout, args.ext_layers)
 
         self.lstm_layer = nn.LSTM(
-            input_size=self.bert.model.config.hidden_size, hidden_size=self.bert.model.config.hidden_size
+            input_size=2304, hidden_size=2304
         )
-        self.wo = nn.Linear(self.bert.model.config.hidden_size, 1, bias=True)
+        self.wo = nn.Linear(2304, 1, bias=True)
         self.sigmoid = nn.Sigmoid()
-        self.generator = Generator(self.bert.model.config.hidden_size)
+        self.generator = Generator(2304)
 
         if (args.encoder == 'baseline'):
             bert_config = BertConfig(self.bert.model.config.vocab_size, hidden_size=args.ext_hidden_size,
@@ -186,19 +250,19 @@ class ExtSummarizer(nn.Module):
         sents_vec = sents_vec * mask_cls[:, :, None].float()
         sent_scores, add_lstm = self.ext_layer(sents_vec, mask_cls) # .squeeze(-
 
-        if add_lstm:
-            sent_scores_lstm, _ = self.lstm_layer(
-                sent_scores
-            )
-            sent_scores_lstm2 = self.sigmoid(self.wo(sent_scores_lstm))
-        # sent_scores_lstm2 = self.generator(sent_scores_lstm)
-            sent_scores_lstm3 = sent_scores_lstm2.squeeze(-1) * mask_cls.float()
-            sent_scores_lstm4 = sent_scores_lstm3.squeeze(-1)
-            return sent_scores_lstm4, mask_cls
-        # generator_output = self.generator(sent_scores_lstm4)
-        else:
+        # if add_lstm:
+        #     sent_scores_lstm, _ = self.lstm_layer(
+        #         sent_scores
+        #     )
+        #     sent_scores_lstm2 = self.sigmoid(self.wo(sent_scores_lstm))
+        # # sent_scores_lstm2 = self.generator(sent_scores_lstm)
+        #     sent_scores_lstm3 = sent_scores_lstm2.squeeze(-1) * mask_cls.float()
+        #     sent_scores_lstm4 = sent_scores_lstm3.squeeze(-1)
+        #     return sent_scores_lstm4, mask_cls
+        # # generator_output = self.generator(sent_scores_lstm4)
+        # else:
             # final_sent_scores = sent_scores_lstm4 * 0.3 + sent_scores * 0.7
-            return sent_scores, mask_cls
+        return sent_scores, mask_cls
 
         # else:
         #     return sent_scores, mask_cls

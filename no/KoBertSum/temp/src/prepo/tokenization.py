@@ -46,7 +46,7 @@ PRETRAINED_VOCAB_POSITIONAL_EMBEDDINGS_SIZE_MAP = {
     'bert-base-multilingual-uncased': 2304,
     'bert-base-multilingual-cased': 2304,
     'bert-base-chinese': 2304,
-    "monologg/kobert": 2304,
+    "monologg/kobert": 512,
     "monologg/kobert-lm": 2304,
     "monologg/distilkobert": 2304,
 }

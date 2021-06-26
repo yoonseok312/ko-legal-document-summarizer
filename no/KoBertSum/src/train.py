@@ -43,7 +43,7 @@ RESULT_DIR = f'{PROJECT_DIR}/{PROBLEM}/results'
 
 if __name__ == '__main__':
 
-    # os.system(f"""\
+    # os.system(f"""
     #             python3 train.py -task ext -mode validate \
     #             -test_from {MODEL_DIR}/1209_1237/model_step_6000.pt \
     #             -bert_data_path {BERT_DATA_DIR}/test \
@@ -86,15 +86,15 @@ if __name__ == '__main__':
     parser.add_argument("-dec_hidden_size", default=768, type=int)
     parser.add_argument("-dec_heads", default=8, type=int)
     parser.add_argument("-dec_ff_size", default=2048, type=int)
-    parser.add_argument("-enc_hidden_size", default=2304, type=int)
-    parser.add_argument("-enc_ff_size", default=2304, type=int)
+    parser.add_argument("-enc_hidden_size", default=512, type=int)
+    parser.add_argument("-enc_ff_size", default=512, type=int)
     parser.add_argument("-enc_dropout", default=0.2, type=float)
     parser.add_argument("-enc_layers", default=6, type=int)
 
     # params for EXT
     parser.add_argument("-ext_dropout", default=0.2, type=float)
     parser.add_argument("-ext_layers", default=2, type=int)
-    parser.add_argument("-ext_hidden_size", default=768, type=int)
+    parser.add_argument("-ext_hidden_size", default=512, type=int)
     parser.add_argument("-ext_heads", default=8, type=int)
     parser.add_argument("-ext_ff_size", default=2048, type=int)
 
