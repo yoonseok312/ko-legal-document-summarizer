@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # args.n_cpus = 32
 
     # now = time.strftime('%m%d_%H%M')
-    now = "lstm_ensemble_0.7_0.3"
+    now = "lstm_ensemble_0.7_0.3_2"
     # now = "lstm"
 
 

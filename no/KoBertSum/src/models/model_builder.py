@@ -194,7 +194,7 @@ class ExtSummarizer(nn.Module):
         sent_scores_lstm3 = sent_scores_lstm2.squeeze(-1) * mask_cls.float()
         sent_scores_lstm4 = sent_scores_lstm3.squeeze(-1)
         # generator_output = self.generator(sent_scores_lstm4)
-        final_sent_scores = sent_scores_lstm4 * 0.7 + sent_scores * 0.3
+        final_sent_scores = sent_scores_lstm4 * 0.3 + sent_scores * 0.7
         return final_sent_scores, mask_cls
 
         # else:
