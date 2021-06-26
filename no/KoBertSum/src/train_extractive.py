@@ -11,6 +11,7 @@ import random
 import signal
 import time
 
+import pandas as pd
 import torch
 
 import distributed
@@ -202,6 +203,18 @@ def validate(args, device_id, pt, step):
                                         shuffle=False, is_test=False)
     trainer = build_trainer(args, device_id, model, None)
     stats = trainer.validate(valid_iter, step)
+    predicted_labels, true_labels = trainer.test_for_results_only(valid_iter, step)
+    results = []
+    for i in range(len(true_labels)):
+        x = 0
+        for j in range(len(predicted_labels[i])):
+            if predicted_labels[i][j] in true_labels[i]:
+                x += 1
+        results.append(x)
+    for i in range(4):
+        print(i, "hits:", results.count(i))
+    ext_df = pd.DataFrame({"predict": predicted_labels, "answer": true_labels, "hit_count": results})
+    ext_df.to_csv(f"validation_hit_stats_step_{step}")
     return stats.xent()
 
 
