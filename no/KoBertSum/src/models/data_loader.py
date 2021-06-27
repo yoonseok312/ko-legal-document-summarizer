@@ -38,7 +38,8 @@ class Batch(object):
             clss = torch.tensor(self._pad(pre_clss, -1))
             for i in range(len(pre_src_sent_labels)):
                 if sum(pre_src_sent_labels[i]) < 3:
-                    print("fatal error")
+                    print("batch ext not 3", pre_src_sent_labels[i])
+                    print("len", len(pre_src_sent_labels[i]))
             src_sent_labels = torch.tensor(self._pad(pre_src_sent_labels, 0))
             mask_cls = ~(clss == -1)
             clss[clss == -1] = 0
@@ -246,9 +247,9 @@ class DataIterator(object):
             elif size_so_far > batch_size:
                 yield minibatch[:-1]
                 minibatch, size_so_far = minibatch[-1:], self.batch_size_fn(ex, 1)
-            for i in range(len(minibatch[:-1])):
-                if sum(minibatch[i][4]) < 3:
-                    print("fatal error 4")
+            # for i in range(len(minibatch[:-1])):
+            #     if sum(minibatch[i][4]) < 3:
+                    # print("fatal error 4")
         if minibatch:
             yield minibatch
 
@@ -264,10 +265,10 @@ class DataIterator(object):
                 minibatch, size_so_far = [], 0
             elif size_so_far > batch_size:
                 yield minibatch[:-1]
-                for i in range(len(minibatch[:-1])):
-                    if sum(minibatch[i][4]) < 3:
-                        count += 1
-                        print("fatal error 2")
+                # for i in range(len(minibatch[:-1])):
+                #     if sum(minibatch[i][4]) < 3:
+                #         count += 1
+                        # print("fatal error 2")
                 # print("fatal count", count)
                 minibatch, size_so_far = minibatch[-1:], self.batch_size_fn(ex, 1)
         if minibatch:

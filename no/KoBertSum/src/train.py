@@ -59,7 +59,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
-    parser.add_argument("-mode", default='validate', type=str, choices=['train', 'validate', 'test'])
+    parser.add_argument("-mode", default='test', type=str, choices=['train', 'validate', 'test'])
     parser.add_argument("-bert_data_path", default='/tmp/pycharm_project_581/no/KoBertSum/ext/data/bert_data/train_ext')
     parser.add_argument("-model_path", default='../models/')
     parser.add_argument("-result_path", default=f'{RESULT_DIR}/result_1209_1237')
@@ -130,8 +130,8 @@ if __name__ == '__main__':
     parser.add_argument('-log_file', default='../ext/logs/test_1209_1237.log')
     parser.add_argument('-seed', default=666, type=int)
 
-    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=False)
-    # parser.add_argument("-test_from", default=f'{MODEL_DIR}/1209_1237/model_step_6000.pt')
+    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=True)
+    parser.add_argument("-test_from", default=f'{MODEL_DIR}/bert_9_2/model_step_15000.pt')
     parser.add_argument("-test_start_from", default=-1, type=int)
 
     parser.add_argument("-train_from", default='')
@@ -182,11 +182,13 @@ if __name__ == '__main__':
             train_validate_ext(args, device_id)
         if (args.mode == 'test'):
             cp = args.test_from
+            print(cp)
             try:
                 step = int(cp.split('.')[-2].split('_')[-1])
             except:
                 step = 0
             test_ext(args, device_id, cp, step)
+            print("called")
         elif (args.mode == 'test_text'):
             cp = args.test_from
             try:

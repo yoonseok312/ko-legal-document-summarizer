@@ -223,7 +223,7 @@ class Trainer(object):
 
                 all_labels.extend([[j for j in range(batch.clss.size(1)) if labels[i][j] == 1] for i in
                                    range(batch.batch_size)])
-                print(batch.clss.size(1))
+                # print(batch.clss.size(1))
 
                 segs = batch.segs
                 clss = batch.clss
@@ -287,7 +287,7 @@ class Trainer(object):
 
                 batch_stats = Statistics(float(loss.cpu().data.numpy()), len(labels))
                 stats.update(batch_stats)
-            print(error_count, total_count)
+            # print(error_count, total_count)
             self._report_step(0, step, valid_stats=stats)
             print(len(final_idx))
             print(len(all_labels))

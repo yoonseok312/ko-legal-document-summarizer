@@ -127,7 +127,7 @@ def validate_ext(args, device_id):
     else:
         while (True):
             # cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
-            cp_files = glob.glob(os.path.join(args.model_path, 'model_step_500.pt'))
+            cp_files = glob.glob(os.path.join(args.model_path, 'model_step_15000.pt'))
             cp_files.sort(key=os.path.getmtime)
             if (cp_files):
                 cp = cp_files[-1]
@@ -194,7 +194,7 @@ def validate(args, device_id, pt, step):
     for k in opt.keys():
         if (k in model_flags):
             setattr(args, k, opt[k])
-    print(args)
+    # print(args)
 
     model = ExtSummarizer(args, device, checkpoint)
     model.eval()
@@ -206,7 +206,7 @@ def validate(args, device_id, pt, step):
     # valid_iter_2 = copy.deepcopy(valid_iter)
     stats, predicted_labels, true_labels = trainer.validate(valid_iter, step)
     #print("predicted:", predicted_labels)
-    print("true:", true_labels)
+    # print("true:", true_labels)
     #predicted_labels, true_labels = trainer.test_for_results_only(valid_iter_2, step)
     results = []
     for i in range(len(true_labels)):
@@ -218,7 +218,7 @@ def validate(args, device_id, pt, step):
     for i in range(4):
         print(i, "hits:", results.count(i))
     # ext_df = pd.DataFrame({"predict": predicted_labels, "answer": true_labels, "hit_count": results})
-    ext_df.to_csv(f"validation_hit_stats_step_{step}")
+    # ext_df.to_csv(f"validation_hit_stats_step_{step}")
     return stats.xent()
 
 

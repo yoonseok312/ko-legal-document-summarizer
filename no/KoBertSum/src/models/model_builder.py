@@ -155,10 +155,10 @@ class Bert(nn.Module):
         """
 
         super().__init__()
-        print(vocab_size, hidden, n_layers, attn_heads, dropout)
+        # print(vocab_size, hidden, n_layers, attn_heads, dropout)
         self.model = BERT(vocab_size, hidden, n_layers, attn_heads, dropout)
         print(os.getcwd())
-        self.model.load_state_dict(torch.load('models/bert.model.ep0'))
+        self.model.load_state_dict(torch.load('models/bert.model.ep100'))
         # model.eval()
 
         self.finetune = finetune

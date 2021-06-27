@@ -8,8 +8,8 @@ import argparse
 PROBLEM = 'ext'
 
 ## 사용할 path 정의
-PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
-# PROJECT_DIR = os.getcwd()
+# PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
+PROJECT_DIR = os.getcwd()
 print(PROJECT_DIR)
 
 DATA_DIR = f'{PROJECT_DIR}/{PROBLEM}/data'
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # args.n_cpus = 32
 
     # now = time.strftime('%m%d_%H%M')
-    now = "lstm_bert"
+    now = "bert_100_2"
     # now = "lstm"
 
 
@@ -69,11 +69,11 @@ if __name__ == '__main__':
 
         do_str = f"python train.py -task ext -mode train"  \
             + f" -bert_data_path {BERT_DATA_DIR}/train_{args.target_summary_sent}"  \
-            + f" -save_checkpoint_steps 500 -visible_gpus {args.visible_gpus} -report_every 50"
+            + f" -save_checkpoint_steps 2000 -visible_gpus {args.visible_gpus} -report_every 50"
 
         param1 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 500 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 2304"
         param2 = " -ext_dropout 0.1 -lr 2e-3 -batch_size 1000 -train_steps 5000 -accum_count 2 -use_interval true -warmup_steps 3000 -max_pos 2304"
-        param3 = " -ext_dropout 0.1 -max_pos 2304 -lr 2e-3 -warmup_steps 10000 -batch_size 3000 -accum_count 2 -train_steps 15000  -use_interval true"
+        param3 = " -ext_dropout 0.1 -max_pos 2304 -lr 2e-3 -warmup_steps 10000 -batch_size 3000 -accum_count 2 -train_steps 50000  -use_interval true"
         do_str += param3
 
         if args.train_from is None:
@@ -137,6 +137,7 @@ if __name__ == '__main__':
 
         model_folder, model_name = args.test_from.rsplit('/', 1)
         model_name = model_name.split('_', 1)[1].split('.')[0]
+
         os.system(f"""\
             python train.py -task ext -mode test \
             -test_from {MODEL_DIR}/{args.test_from} \
@@ -149,6 +150,7 @@ if __name__ == '__main__':
             -report_rouge False \
             -max_tgt_len 100
         """)
+        print("success")
         # -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50 \
         # -report_rouge True  \
         #  -model_path {MODEL_DIR}

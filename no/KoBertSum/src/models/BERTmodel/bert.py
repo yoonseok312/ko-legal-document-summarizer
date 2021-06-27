@@ -40,10 +40,18 @@ class BERT(nn.Module):
     def forward(self, x, segment_info, mask):
         # attention masking for padded token
         # torch.ByteTensor([batch_size, 1, seq_len, seq_len)
-        mask = (x > 0).unsqueeze(1).repeat(1, x.size(1), 1).unsqueeze(1)
+
+        # print("x", x, x.shape)
+        mask = mask.unsqueeze(1).repeat(1, x.size(1), 1).unsqueeze(1)
+
+        # print("original_mask", mask2, mask2.shape)
+        # print("new", mask, mask.shape)
+        # print("x2", x.shape)
 
         # embedding the indexed sequence to sequence of vectors
         x = self.embedding(x, segment_info)
+        # print("x", x, x.shape)
+        # print("x3", x.shape)
 
         # running over multiple transformer blocks
         for transformer in self.transformer_blocks:

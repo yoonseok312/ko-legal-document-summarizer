@@ -42,9 +42,9 @@ PRETRAINED_VOCAB_FILES_MAP = {
 }
 
 PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
-    "monologg/kobert": 2304, # 512
-    "monologg/kobert-lm": 2304, # 512
-    "monologg/distilkobert": 2304 # 512
+    "monologg/kobert": 512, # 512
+    "monologg/kobert-lm": 512, # 512
+    "monologg/distilkobert": 512 # 512
 }
 
 PRETRAINED_INIT_CONFIGURATION = {
@@ -63,8 +63,8 @@ class KoBertTokenizer(PreTrainedTokenizer):
     """
     vocab_files_names = VOCAB_FILES_NAMES
     pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
-    # pretrained_init_configuration = PRETRAINED_INIT_CONFIGURATION
-    max_model_input_sizes = 2304 # 2304
+    pretrained_init_configuration = PRETRAINED_INIT_CONFIGURATION
+    max_model_input_sizes = 512 # 2304
 
     def __init__(
             self,

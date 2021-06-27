@@ -33,15 +33,19 @@ if __name__ == '__main__':
     test_df = test_df['id']
 
     # 추론결과
-    with open(RESULT_DIR + '/' + f'result_1209_1237_step_6000_num.csv', 'r') as file:
+    with open(RESULT_DIR + '/' + f'result_bert_9_2_step_15000_num.csv', 'r') as file:
         print("arg:", sys.argv[1])
         lines = file.readlines()
     # print(lines)
     test_pred_list = []
     cnt = 0
+    count = 0
     for line in lines:
         top_3 = list(map(int, line.split(',')))
         print(top_3)
+        count += 1
+        if len(top_3) == 0:
+            print("--------ㅗ--------")
         while len(top_3) < 3:
             for i in range(0, 10):
                 if i not in top_3:
@@ -55,6 +59,7 @@ if __name__ == '__main__':
             'summary_index3': top_3[2],
         })
     print(cnt)
+    print(count)
 
     # pred_list_df = pd.DataFrame(test_pred_list)
     # pred_list_df['id'] = test_df

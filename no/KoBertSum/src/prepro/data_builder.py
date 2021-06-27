@@ -341,7 +341,9 @@ class BertData():
         src_txt = [' '.join(sent) for sent in src]
         text = ' {} {} '.format(self.sep_token, self.cls_token).join(src_txt)
 
-        src_subtokens = self.tokenizer.tokenize(text)
+        # src_subtokens = self.tokenizer.tokenize(text)
+        src_subtokens = text.split()
+        print("sucess!")
 
         src_subtokens = [self.cls_token] + src_subtokens + [self.sep_token]
         src_subtoken_idxs = self.tokenizer.convert_tokens_to_ids(src_subtokens)
@@ -357,9 +359,14 @@ class BertData():
         sent_labels = sent_labels[:len(cls_ids)]
 
         # kobert transforemrs에 연결되어 있는 transforemrs tokenizer 사용
-        tgt_subtokens_str = self.tgt_bos + ' '  \
-            + f' {self.tgt_sent_split} '.join([' '.join(self.tokenizer.tokenize(' '.join(tt))) for tt in tgt]) \
-            + ' ' + self.tgt_eos
+        # tgt_subtokens_str = self.tgt_bos + ' '  \
+        #     + f' {self.tgt_sent_split} '.join([' '.join(self.tokenizer.tokenize(' '.join(tt))) for tt in tgt]) \
+        #     + ' ' + self.tgt_eos
+
+        tgt_subtokens_str = self.tgt_bos + ' ' \
+                            + f' {self.tgt_sent_split} '.join(
+            [' '.join(tt.split()) for tt in tgt]) \
+                            + ' ' + self.tgt_eos
         ## presumm tokenizer 사용
         # """Runs basic tokenization (punctuation splitting, lower casing, etc.)."""
         # tgt_subtokens_str = '[unused0] ' + ' [unused2] '.join(

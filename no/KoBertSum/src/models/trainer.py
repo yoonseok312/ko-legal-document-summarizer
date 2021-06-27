@@ -126,6 +126,7 @@ class Trainer(object):
 
         # step =  self.optim._step + 1
         step =  self.optims[0]._step + 1
+        print("step 3:", step)
 
         true_batchs = []
         accum = 0
@@ -137,6 +138,7 @@ class Trainer(object):
         self._start_report_manager(start_time=total_stats.start_time)
 
         while step <= train_steps:
+            print("step 2:", step)
 
             reduce_counter = 0
             for i, batch in enumerate(train_iter):
@@ -165,8 +167,10 @@ class Trainer(object):
                         true_batchs = []
                         accum = 0
                         normalization = 0
+                        print("step:", step)
                         if (step % self.save_checkpoint_steps == 0 and self.gpu_rank == 0):
-                            self._save(step)
+                            if step > 8000:
+                                self._save(step)
 
                         step += 1
                         if step > train_steps:
@@ -323,6 +327,8 @@ class Trainer(object):
         return stats
 
     def _save(self, step):
+        if step < 8000:
+            pass
         real_model = self.model
         # real_generator = (self.generator.module
         #                   if isinstance(self.generator, torch.nn.DataParallel)
