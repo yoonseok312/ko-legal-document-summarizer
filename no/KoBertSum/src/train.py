@@ -4,6 +4,8 @@
 """
 from __future__ import division
 
+from subprocess import call
+import torch
 import argparse
 import os
 from others.logging import init_logger
@@ -25,8 +27,8 @@ def str2bool(v):
 PROBLEM = 'ext'
 
 ## 사용할 path 정의
-PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
-# PROJECT_DIR = os.getcwd()
+# PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
+PROJECT_DIR = os.getcwd()
 print(PROJECT_DIR)
 
 DATA_DIR = f'{PROJECT_DIR}/{PROBLEM}/data'
@@ -145,7 +147,7 @@ if __name__ == '__main__':
 
     init_logger(args.log_file)
     device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
-    device_id = 0 if device == "cuda" else -1
+    device_id = 0 if device == f"cuda:{args.visible_gpus}" else -1
 
     # if (args.task == 'abs'):
     #     if (args.mode == 'train'):
@@ -177,6 +179,15 @@ if __name__ == '__main__':
         if (args.mode == 'train'):
             train_ext(args, device_id)
         elif (args.mode == 'validate'):
+            print('__CUDNN VERSION:', torch.backends.cudnn.version())
+            print('__Number CUDA Devices:', torch.cuda.device_count())
+            print('__Devices')
+            call(["nvidia-smi", "--format=csv",
+                  "--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free"])
+            print('Active CUDA Device: GPU', torch.cuda.current_device())
+
+            print('Available devices ', torch.cuda.device_count())
+            print('Current cuda device ', torch.cuda.current_device())
             validate_ext(args, device_id)
         elif (args.mode == 'train_valid'):
             train_validate_ext(args, device_id)

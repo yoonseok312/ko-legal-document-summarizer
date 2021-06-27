@@ -370,15 +370,15 @@ class Trainer(object):
                                 if (j >= len(batch.src_str[i])):
                                     continue
                                 candidate = batch.src_str[i][j].strip()
-                                if (self.args.block_trigram):
-                                    if (not _block_tri(candidate, _pred)):
-                                        _pred.append(candidate)
-                                        _pred_idx.append(j)
-                                        batch_selected_idx.append(j)
-                                else:
-                                    _pred.append(candidate)
-                                    _pred_idx.append(j)
-                                    batch_selected_idx.append(j)
+                                # if (self.args.block_trigram):
+                                #     if (not _block_tri(candidate, _pred)):
+                                #         _pred.append(candidate)
+                                #         _pred_idx.append(j)
+                                #         batch_selected_idx.append(j)
+                                # else:
+                                _pred.append(candidate)
+                                _pred_idx.append(j)
+                                batch_selected_idx.append(j)
 
                                 if ((not cal_oracle) and (not self.args.recall_eval) and len(_pred) == 3):
                                     break

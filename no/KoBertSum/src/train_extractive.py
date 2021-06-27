@@ -217,13 +217,14 @@ def validate(args, device_id, pt, step):
         results.append(x)
     for i in range(4):
         print(i, "hits:", results.count(i))
+    print("Hit rate", (results.count(1) + results.count(2) * 2 + results.count(3) * 3)/((results.count(0) + results.count(1) + results.count(2) + results.count(3)) * 3))
     # ext_df = pd.DataFrame({"predict": predicted_labels, "answer": true_labels, "hit_count": results})
     # ext_df.to_csv(f"validation_hit_stats_step_{step}")
     return stats.xent()
 
 
 def test_ext(args, device_id, pt, step):
-    device = "cpu" if args.visible_gpus == '-1' else "cuda"
+    device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
     if (pt != ''):
         test_from = pt
     else:
