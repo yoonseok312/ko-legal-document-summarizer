@@ -201,9 +201,9 @@ class DataIterator(object):
         clss = ex['clss']
         src_txt = ex['src_txt']
         tgt_txt = ex['tgt_txt']
-        clss.append(len(src))
-
+        
         if len(segs) > self.args.max_pos:
+            clss.append(len(src))
             bins = len(clss) - 1
             counts = [2 for _ in range(bins)]
             tot_cnt = bins * 2
@@ -233,13 +233,13 @@ class DataIterator(object):
             print(new_clss)
 
         # some old logics...
-        # end_id = [src[-1]]
-        # src = src[:-1][:self.args.max_pos - 1] + end_id
-        # segs = segs[:self.args.max_pos]
-        # max_sent_id = bisect.bisect_left(clss, self.args.max_pos)
-        # src_sent_labels = src_sent_labels[:max_sent_id]
-        # clss = clss[:max_sent_id]
-        # src_txt = src_txt[:max_sent_id]
+        end_id = [src[-1]]
+        src = src[:-1][:self.args.max_pos - 1] + end_id
+        segs = segs[:self.args.max_pos]
+        max_sent_id = bisect.bisect_left(clss, self.args.max_pos)
+        src_sent_labels = src_sent_labels[:max_sent_id]
+        clss = clss[:max_sent_id]
+        src_txt = src_txt[:max_sent_id]
 
 
 
