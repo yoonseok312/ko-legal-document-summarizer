@@ -12,7 +12,13 @@ def train():
     batch_size = 1024
     n_iters = 100000
     visible_gpus = 0
-    seed = 666
+    seed = 777
+    # Create RNN
+    input_dim = 512  # input dimension
+    hidden_dim = 1024  # hidden layer dimension
+    layer_dim = 5  # number of hidden layers
+    output_dim = 2  # output dimension
+    seq_len = 20
 
     device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
     device_id = 0 if device == f"cuda" else -1
@@ -29,7 +35,7 @@ def train():
     np.random.seed(seed)
 
     tokenized_data, embedding_model, _ = tokenize()
-    input_list, input_train, input_test, target_train, target_test = create_dataset(tokenized_data, embedding_model)
+    input_list, input_train, input_test, target_train, target_test = create_dataset(tokenized_data, embedding_model, input_dim, seq_len)
 
     num_epochs = n_iters / (len(input_list) / batch_size)
     num_epochs = int(num_epochs)
@@ -48,12 +54,6 @@ def train():
     # data loader
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test, batch_size=batch_size, shuffle=False)
-
-    # Create RNN
-    input_dim = 512  # input dimension
-    hidden_dim = 1024  # hidden layer dimension
-    layer_dim = 5  # number of hidden layers
-    output_dim = 2  # output dimension
 
     model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
 

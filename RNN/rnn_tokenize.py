@@ -38,22 +38,22 @@ def tokenize():
 
     return tokenized_train_data, embedding_model, l_tokenizer
 
-def create_dataset(tokenized_data: List, embedding_model: Word2Vec):
+def create_dataset(tokenized_data: List, embedding_model: Word2Vec, input_dim: int, seq_len: int):
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")
     input_list = []
     for sent in tokenized_data:
         temp_list = []
-        sent = sent[-20:]
+        sent = sent[-seq_len:]
         for word_count, word in enumerate(sent):
-            if word_count == 20:
+            if word_count == seq_len:
                 break
             if word in embedding_model.wv:
                 temp_list += list(rating for rating in embedding_model.wv[word])
             else:
-                temp_list += [0] * 100
-        temp_list = [0] * 100 * (20 - len(sent)) + temp_list
-        if len(temp_list) != 2000:
+                temp_list += [0] * input_dim
+        temp_list = [0] * input_dim * (seq_len - len(sent)) + temp_list
+        if len(temp_list) != input_dim * seq_len:
             print('hell')
         input_list.append(temp_list)
 
