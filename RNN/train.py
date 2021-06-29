@@ -34,7 +34,7 @@ def train():
     torch.backends.cudnn.benchmark = False
     np.random.seed(seed)
 
-    tokenized_data, embedding_model, _ = tokenize()
+    tokenized_data, embedding_model, _ = tokenize(input_dim)
     input_list, input_train, input_test, target_train, target_test = create_dataset(tokenized_data, embedding_model, input_dim, seq_len)
 
     num_epochs = n_iters / (len(input_list) / batch_size)

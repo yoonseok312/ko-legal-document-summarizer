@@ -14,20 +14,21 @@ from model import RNNModel
 
 def make_submission():
     # Create RNN
-    input_dim = 100  # input dimension
-    hidden_dim = 256  # hidden layer dimension
+    input_dim = 512  # input dimension
+    hidden_dim = 1024  # hidden layer dimension
     layer_dim = 5  # number of hidden layers
     output_dim = 2  # output dimension
     visible_gpus = 0
+    seq_len = 20
 
     device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
     device_id = 0 if device == f"cuda" else -1
 
     model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
-    model.load_state_dict((torch.load('./model/model_5200.pth')))
+    model.load_state_dict((torch.load('./model/model_5000.pth')))
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")
-    tokenized_data, embedding_model, l_tokenizer = tokenize()
+    tokenized_data, embedding_model, l_tokenizer = tokenize(input_dim)
 
     word_extractor = WordExtractor()
     word_extractor.train(train_data['sentence'])
@@ -53,20 +54,19 @@ def make_submission():
     tokenized_test_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in test_data['sentence']]
 
     test_list = []
+    zero_list = [0] * input_dim
     for sent in tokenized_test_data:
         temp_list = []
-        sent = sent[-20:]
+        sent = sent[-seq_len:]
         for word_count, word in enumerate(sent):
-            if word_count == 20:
+            if word_count == seq_len:
                 break
             if word in embedding_model.wv:
-                temp_list += list(rating for rating in embedding_model.wv[word])
+                temp_list += [rating for rating in embedding_model.wv[word]]
             else:
-                temp_list += [0] * 100
-        temp_list = [0] * 100 * (20 - len(sent)) + temp_list
-        if len(temp_list) != 2000:
-            print('hell')
-        test_list.append(temp_list)
+                temp_list += zero_list
+        temp_list = zero_list * (seq_len - len(sent)) + temp_list
+        test_list += temp_list
 
     test_tensor = torch.from_numpy(np.array(test_list, dtype=np.float64)).float()
     test_placehorder = torch.from_numpy(np.array([0] * len(test_list), dtype=np.float64)).float()
