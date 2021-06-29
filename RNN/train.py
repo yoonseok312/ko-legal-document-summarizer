@@ -10,15 +10,15 @@ import random
 
 def train():
     batch_size = 1024
-    n_iters = 100000
+    n_iters = 20000
     visible_gpus = 0
     seed = 777
     # Create RNN
-    input_dim = 512  # input dimension
-    hidden_dim = 1024  # hidden layer dimension
+    input_dim = 128  # input dimension
+    hidden_dim = 512  # hidden layer dimension
     layer_dim = 5  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 20
+    seq_len = 100
 
     device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
     device_id = 0 if device == f"cuda" else -1
@@ -64,7 +64,6 @@ def train():
     learning_rate = 0.05
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
-    seq_dim = 20
     loss_list = []
     iteration_list = []
     accuracy_list = []
@@ -73,7 +72,7 @@ def train():
     for epoch in range(num_epochs):
         for i, (images, labels) in enumerate(train_loader):
 
-            train = Variable(images.view(-1, seq_dim, input_dim))
+            train = Variable(images.view(-1, seq_len, input_dim))
             labels = Variable(labels)
 
             # Clear gradients
@@ -100,7 +99,7 @@ def train():
                 total = 0
                 # Iterate through test dataset
                 for images, labels in test_loader:
-                    images = Variable(images.view(-1, seq_dim, input_dim))
+                    images = Variable(images.view(-1, seq_len, input_dim))
 
                     # Forward propagation
                     outputs = model(images)
@@ -122,8 +121,8 @@ def train():
                 if count % 50 == 0:
                     # Print Loss
                     print('Iteration: {}  Loss: {}  Accuracy: {} %'.format(count, loss.data, accuracy))
-                    if count % 1000 == 0:
-                        torch.save(model.state_dict(), './model/model_' + str(count) + '.pth')
+                    if count % 500 == 0:
+                        torch.save(model.state_dict(), './model/seq_len/model_' + str(count) + '.pth')
 
 if __name__ == '__main__':
     train()
