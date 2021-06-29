@@ -120,4 +120,5 @@ def make_submission():
     with open("./output/submission_06290222.json", "w") as json_file:
         json.dump(submission_template, json_file)
 
-# make_submission()
+if __name__ == '__main__':
+    make_submission()
