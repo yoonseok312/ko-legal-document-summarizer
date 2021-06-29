@@ -2,6 +2,7 @@ from soynlp import DoublespaceLineCorpus
 from soynlp.word import WordExtractor
 from soynlp.tokenizer import LTokenizer
 from gensim.models.word2vec import Word2Vec
+from tqdm import tqdm
 
 import pandas as pd
 import torch
@@ -13,7 +14,7 @@ import numpy as np
 from typing import List
 import json
 
-def tokenize():
+def tokenize(input_dim: int):
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")
     test_data = pd.read_pickle(f"./data/test_df.pickle")
@@ -34,7 +35,7 @@ def tokenize():
     # tokenized_test_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in test_data['sentence']]
     # tokenized_all_data = tokenized_train_data + tokenized_test_data
 
-    embedding_model = Word2Vec(sentences=tokenized_all_data, vector_size=512, window=8, min_count=1, workers=16, sg=0)
+    embedding_model = Word2Vec(sentences=tokenized_all_data, vector_size=input_dim, window=8, min_count=1, workers=16, sg=0)
 
     return tokenized_train_data, embedding_model, l_tokenizer
 
@@ -42,7 +43,7 @@ def create_dataset(tokenized_data: List, embedding_model: Word2Vec, input_dim: i
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")
     input_list = []
-    for sent in tokenized_data:
+    for sent in tqdm(tokenized_data):
         temp_list = []
         sent = sent[-seq_len:]
         for word_count, word in enumerate(sent):

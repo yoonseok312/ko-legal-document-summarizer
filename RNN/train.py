@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
-from model import RNNModel
+from model import RNNModel, LSTM
 from rnn_tokenize import tokenize, create_dataset
 import numpy as np
 import random
@@ -11,14 +11,14 @@ import random
 def train():
     batch_size = 1024
     n_iters = 100000
-    visible_gpus = 0
+    visible_gpus = 1
     seed = 777
     # Create RNN
-    input_dim = 512  # input dimension
-    hidden_dim = 1024  # hidden layer dimension
-    layer_dim = 5  # number of hidden layers
-    output_dim = 2  # output dimension
-    seq_len = 20
+    input_dim = 10  # input dimension
+    hidden_dim = 10  # hidden layer dimension
+    layer_dim = 1  # number of hidden layers
+    output_dim = 1  # output dimension
+    seq_len = 10
 
     device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
     device_id = 0 if device == f"cuda" else -1
@@ -34,7 +34,7 @@ def train():
     torch.backends.cudnn.benchmark = False
     np.random.seed(seed)
 
-    tokenized_data, embedding_model, _ = tokenize()
+    tokenized_data, embedding_model, _ = tokenize(input_dim)
     input_list, input_train, input_test, target_train, target_test = create_dataset(tokenized_data, embedding_model, input_dim, seq_len)
 
     num_epochs = n_iters / (len(input_list) / batch_size)
@@ -55,7 +55,7 @@ def train():
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test, batch_size=batch_size, shuffle=False)
 
-    model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+    model = LSTM(input_dim, hidden_dim, layer_dim, output_dim, device)
 
     # Cross Entropy Loss
     error = nn.CrossEntropyLoss()
