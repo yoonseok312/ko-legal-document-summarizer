@@ -73,7 +73,7 @@ def train():
     for epoch in range(num_epochs):
         for i, (images, labels) in enumerate(train_loader):
 
-            train = Variable(images.view(-1, seq_dim, input_dim))
+            train = Variable(images.view(layer_dim, seq_dim, input_dim))
             labels = Variable(labels)
 
             # Clear gradients

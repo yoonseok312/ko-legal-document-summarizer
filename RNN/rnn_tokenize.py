@@ -41,6 +41,8 @@ def tokenize(input_dim: int):
 
 def create_dataset(tokenized_data: List, embedding_model: Word2Vec, input_dim: int, seq_len: int):
 
+    print("Enter create dataset")
+
     train_data = pd.read_pickle(f"./data/train_df.pickle")
     input_list = []
     for sent in tqdm(tokenized_data):
@@ -64,4 +66,7 @@ def create_dataset(tokenized_data: List, embedding_model: Word2Vec, input_dim: i
                                                                               np.array(target_list),
                                                                               test_size=0.2,
                                                                               random_state=42)
+
+    print("End create dataset")
+
     return input_list, input_train, input_test, target_train, target_test
