@@ -155,8 +155,18 @@ def create_dataset(
 
     print("loop end")
 
-    target_train = list(train_data['if_ext'])
-    target_valid = list(valid_data['if_ext'])
+    target_train = []
+    for item in list(train_data['if_ext']):
+        # while len(item) < 50:
+        target_train += [item + [0] * (50 - len(item))]
+
+    target_valid = []
+    for item in list(valid_data['if_ext']):
+        # while len(item) < 50:
+        target_valid += [item + [0] * (50 - len(item))]
+
+    # target_train = list(train_data['if_ext'])
+    # target_valid = list(valid_data['if_ext'])
 
     # input_train, input_test, target_train, target_test = train_test_split(np.array(input_list),
     #                                                                           np.array(target_list),

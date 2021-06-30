@@ -57,12 +57,17 @@ def load_data(mode: str):
             ext_list = article['extractive']
             original = article['article_original']
             if_ext = [int(sent_num in ext_list) for sent_num in range(len(original))]
-            print(if_ext)
+            # print(if_ext)
+
             article_ext += ext_list
             train_sent_list += [original]
-            train_ext_list += if_ext
+            train_ext_list += [if_ext]
 
-        train_data = pd.DataFrame(list(zip(train_sent_list, article_ext)),
+            data = list(zip(train_sent_list, train_ext_list))
+            # print(data[0])
+            # print(train_sent_list)
+
+        train_data = pd.DataFrame(list(zip(train_sent_list, train_ext_list)),
                                   columns=['sentence', 'if_ext'])
 
         for c in ",.:;":
@@ -94,6 +99,7 @@ def load_data(mode: str):
             if_ext = [int(sent_num in ext_list) for sent_num in range(len(original))]
 
             article_ext += ext_list
+            valid_ext_list += [if_ext]
             # print(original)
             # article += original
 
@@ -104,7 +110,7 @@ def load_data(mode: str):
 
         print(len(article))
 
-        valid_data = pd.DataFrame(list(zip(valid_sent_list, article_ext)),
+        valid_data = pd.DataFrame(list(zip(valid_sent_list, valid_ext_list)),
                                   columns=['sentence', 'if_ext'])
 
         for c in ",.:;":
