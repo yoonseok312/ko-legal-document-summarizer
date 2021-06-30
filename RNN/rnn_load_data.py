@@ -12,7 +12,7 @@ DATA_DIR = f'{PROJECT_DIR}/data'
 RAW_DATA_DIR = DATA_DIR + '/raw'
 
 def split_data():
-    with open(f"./data/{mode}.json", "r", encoding='UTF-8-sig') as st_json:
+    with open(f"./data/train.json", "r", encoding='UTF-8-sig') as st_json:
         train = json.load(st_json)
 
         df = pd.DataFrame(train)
@@ -38,8 +38,8 @@ def split_data():
         valid_df.reset_index(inplace=True, drop=True)
 
         # save df
-        train_df.to_pickle(f"{RAW_DATA_DIR}/train_unprocessed_df.pickle")
-        valid_df.to_pickle(f"{RAW_DATA_DIR}/valid_unprocessed_df.pickle")
+        train_df.to_pickle("./data/train_unprocessed_df.pickle")
+        valid_df.to_pickle("./data/valid_unprocessed_df.pickle")
 
 def load_data(mode: str):
 
@@ -50,7 +50,7 @@ def load_data(mode: str):
         train_sent_list = []
         train_ext_list = []
 
-        for article in train:
+        for index, article in train.iterrows():
             ext_list = article['extractive']
             original = article['article_original']
             if_ext = [int(sent_num in ext_list) for sent_num in range(len(original))]
@@ -76,7 +76,7 @@ def load_data(mode: str):
         valid_ext_list = []
         valid_ext_list_hit = []
 
-        for article in valid:
+        for index, article in valid.iterrows():
             ext_list = article['extractive']
             original = article['article_original']
             if_ext = [int(sent_num in ext_list) for sent_num in range(len(original))]
