@@ -123,6 +123,7 @@ def load_data(mode: str):
                 test_data["sentence"] = test_data["sentence"].str.replace(c, " ")
 
             test_data.to_pickle(f"./data/{mode}_df.pickle")
+            
 if __name__ == '__main__':
     split_data()
     load_data('train')
