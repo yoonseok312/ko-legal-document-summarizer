@@ -78,11 +78,18 @@ def train():
     num_epochs = int(num_epochs)
 
     # Pytorch train and test sets
+    # input_tensor_train = torch.Tensor(input_train).float()
+
     input_tensor_train = torch.from_numpy(np.array(input_train, dtype=np.float64)).float()
     input_tensor_test = torch.from_numpy(np.array(input_test, dtype=np.float64)).float()
 
+    # target_tensor_train = torch.LongTensor(target_train)
+
+    print("success")
     target_tensor_train = torch.from_numpy(np.array(target_train, dtype=np.float64)).float().type(torch.LongTensor)
     target_tensor_test = torch.from_numpy(np.array(target_test, dtype=np.float64)).float().type(torch.LongTensor)
+
+    print(input_tensor_train.shape, target_tensor_train.shape)
 
     # print(input_tensor_train.shape, target_tensor_train.shape)
 
@@ -95,16 +102,16 @@ def train():
     test_loader = DataLoader(test, batch_size=batch_size, shuffle=False)
 
     # model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
-    # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
-    model = TransformerEncoder(
-        d_model=input_dim,
-        d_ff=hidden_dim,
-        heads=1,
-        dropout=0.1,
-        num_inter_layers=layer_dim,
-        output_dim=output_dim,
-        device=device
-    )
+    model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+    # model = TransformerEncoder(
+    #     d_model=input_dim,
+    #     d_ff=hidden_dim,
+    #     heads=1,
+    #     dropout=0.1,
+    #     num_inter_layers=layer_dim,
+    #     output_dim=output_dim,
+    #     device=device
+    # )
 
     if torch.cuda.is_available():
         model.to(device=f"cuda:{visible_gpus}")

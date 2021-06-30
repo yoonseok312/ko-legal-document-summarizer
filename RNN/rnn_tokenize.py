@@ -24,7 +24,33 @@ def tokenize(input_dim: int):
     valid_sent = valid_data['sentence']
     test_sent = test_data['sentence']
 
-    all_sent = pd.concat([train_sent, valid_sent, test_sent])
+    all_data = pd.concat([train_data, valid_data, test_data])
+
+    all_sents = all_data['sentence']
+
+    print(all_sents[0])
+    train_sents = []
+    valid_sents = []
+    test_sents = []
+
+
+    for i in range(len(train_data)):
+        for j in  range(len(train_data['sentence'][i])):
+            # print(train_data['sentence'][i][j])
+            train_sents += [train_data['sentence'][i][j]]
+
+    for i in range(len(valid_data)):
+        for j in range(len(valid_data['sentence'][i])):
+            valid_sents += [valid_data['sentence'][i][j]]
+
+    for i in range(len(test_data)):
+        for j in range(len(test_data['sentence'][i])):
+            test_sents += [test_data['sentence'][i][j]]
+
+    all_sent = train_sents + valid_sents + test_sents
+
+    # print(all_sent)
+
 
     word_extractor = WordExtractor()
     word_extractor.train(all_sent)
@@ -32,13 +58,43 @@ def tokenize(input_dim: int):
 
     scores = {word: score.cohesion_forward for word, score in word_score_table.items()}
     l_tokenizer = LTokenizer(scores=scores)
-    tokenized_all_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in all_sent]
-    tokenized_train_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in train_sent]
-    tokenized_valid_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in valid_sent]
+    tokenized_all_data = []
+    tokenized_train_data = []
+    tokenized_valid_data = []
+    tokenized_for_vector = []
+    # for index in range(len(all_sents)):
+        # for sentence in all_sents[index]:
+            # print(sentence)
+            # break
+    for article in all_data['sentence']:
+        temp = []
+        for sentence in article:
+            tokenized_for_vector = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in article]
+            # temp += [l_tokenizer.tokenize(sentence, flatten=True)]
+        # tokenized_all_data += [temp]
+    print("all data done")
+    for article in train_data['sentence']:
+        temp = []
+        for sentence in article:
+            temp += [l_tokenizer.tokenize(sentence, flatten=True)]
+        tokenized_train_data += [temp]
+    for article in valid_data['sentence']:
+        temp = []
+        for sentence in article:
+            temp += [l_tokenizer.tokenize(sentence, flatten=True)]
+        tokenized_valid_data += [temp]
+    # for index in range(len(train_sent)):
+    #     article = train_data['sentence'][index].values[0]
+    #     tokenized_train_data += [l_tokenizer.tokenize(sentence, flatten=True) for sentence in article]
+    # for index in range(len(valid_sent)):
+    #     article = valid_data['sentence'][index].values[0]
+    #     tokenized_valid_data += [l_tokenizer.tokenize(sentence, flatten=True) for sentence in article]
+    # tokenized_train_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in train_sent]
+    # tokenized_valid_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in valid_sents]
     # tokenized_test_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in test_data['sentence']]
     # tokenized_all_data = tokenized_train_data + tokenized_test_data
 
-    embedding_model = Word2Vec(sentences=tokenized_all_data, vector_size=input_dim, window=8, min_count=1, workers=16, sg=0)
+    embedding_model = Word2Vec(sentences=tokenized_for_vector, vector_size=input_dim, window=8, min_count=1, workers=16, sg=0)
 
     return tokenized_train_data, tokenized_valid_data, embedding_model, train_data, valid_data, l_tokenizer
 
@@ -55,32 +111,47 @@ def create_dataset(
     print("Start")
     input_train = []
     zero_list = [0] * input_dim
-    for sent in tqdm(tokenized_train_data):
-        temp_list = []
-        sent = sent[-seq_len:]
-        for word_count, word in enumerate(sent):
-            if word_count == seq_len:
-                break
-            if word in embedding_model.wv:
-                temp_list += [rating for rating in embedding_model.wv[word]]
-            else:
-                temp_list += zero_list
-        temp_list = zero_list * (seq_len - len(sent)) + temp_list
-        input_train += [temp_list]
+    max_sent_in_article = 50
+    for article in tqdm(tokenized_train_data):
+        article_list = []
+        for sent in article:
+            temp_list = []
+            sent = sent[-seq_len:]
+            for word_count, word in enumerate(sent):
+                if word_count == seq_len:
+                    break
+                if word in embedding_model.wv:
+                    temp_list += [rating for rating in embedding_model.wv[word]]
+                else:
+                    temp_list += zero_list
+            temp_list = zero_list * (seq_len - len(sent)) + temp_list
+            article_list += [temp_list]
+        if len(article_list) > max_sent_in_article:
+            print("error")
+        while len(article_list) < max_sent_in_article:
+            article_list += [[0] * input_dim * seq_len]
+        input_train += [article_list]
 
     input_valid = []
-    for sent in tqdm(tokenized_valid_data):
-        temp_list = []
-        sent = sent[-seq_len:]
-        for word_count, word in enumerate(sent):
-            if word_count == seq_len:
-                break
-            if word in embedding_model.wv:
-                temp_list += list(rating for rating in embedding_model.wv[word])
-            else:
-                temp_list += [0] * input_dim
-        temp_list = [0] * input_dim * (seq_len - len(sent)) + temp_list
-        input_valid += [temp_list]
+    for article in tqdm(tokenized_valid_data):
+        article_list = []
+        for sent in article:
+            temp_list = []
+            sent = sent[-seq_len:]
+            for word_count, word in enumerate(sent):
+                if word_count == seq_len:
+                    break
+                if word in embedding_model.wv:
+                    temp_list += [rating for rating in embedding_model.wv[word]]
+                else:
+                    temp_list += zero_list
+            temp_list = zero_list * (seq_len - len(sent)) + temp_list
+            article_list += [temp_list]
+        if len(article_list) > max_sent_in_article:
+            print("error")
+        while len(article_list) < max_sent_in_article:
+            article_list += [[0] * input_dim * seq_len]
+        input_valid += [article_list]
 
     print("loop end")
 

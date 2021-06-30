@@ -16,10 +16,12 @@ def split_data():
         train = json.load(st_json)
 
         df = pd.DataFrame(train)
+        df = df[0:10]
 
         ratio = 0.9
         id_by_length = collections.defaultdict(list)
         total_dataset_size = len(df)
+        print(len(df))
         train_ids = []
         valid_ids = []
 
@@ -49,23 +51,29 @@ def load_data(mode: str):
 
         train_sent_list = []
         train_ext_list = []
+        article_ext = []
 
         for index, article in train.iterrows():
             ext_list = article['extractive']
             original = article['article_original']
             if_ext = [int(sent_num in ext_list) for sent_num in range(len(original))]
-
-            train_sent_list += original
+            print(if_ext)
+            article_ext += ext_list
+            train_sent_list += [original]
             train_ext_list += if_ext
 
-        train_data = pd.DataFrame(list(zip(train_sent_list, train_ext_list)),
+        train_data = pd.DataFrame(list(zip(train_sent_list, article_ext)),
                                   columns=['sentence', 'if_ext'])
 
         for c in ",.:;":
-            train_data["sentence"] = train_data["sentence"].str.replace(c, "")
+            for i in range(len(train_data)):
+                for j in range(len(train_data["sentence"][i])):
+                    train_data["sentence"][i][j] = train_data["sentence"][i][j].replace(c, "")
 
         for c in "()[]":
-            train_data["sentence"] = train_data["sentence"].str.replace(c, " ")
+            for i in range(len(train_data)):
+                for j in range(len(train_data["sentence"][i])):
+                    train_data["sentence"][i][j] = train_data["sentence"][i][j].replace(c, " ")
 
         train_data.to_pickle(f"./data/{mode}_df.pickle")
 
@@ -76,23 +84,38 @@ def load_data(mode: str):
         valid_ext_list = []
         valid_ext_list_hit = []
 
+        article_ext = []
+        article = []
+
         for index, article in valid.iterrows():
             ext_list = article['extractive']
-            original = article['article_original']
-            if_ext = [int(sent_num in ext_list) for sent_num in range(len(original))]
 
-            valid_sent_list += original
+            original = article['article_original']
+            if_ext = [ext_list for sent_num in range(len(original))]
+
+            article_ext += ext_list
+            # print(original)
+            # article += original
+
+
+            valid_sent_list += [original]
             valid_ext_list += if_ext
             valid_ext_list_hit.append((ext_list, len(original)))
 
-        valid_data = pd.DataFrame(list(zip(valid_sent_list, valid_ext_list)),
+        print(len(article))
+
+        valid_data = pd.DataFrame(list(zip(valid_sent_list, article_ext)),
                                   columns=['sentence', 'if_ext'])
 
         for c in ",.:;":
-            valid_data["sentence"] = valid_data["sentence"].str.replace(c, "")
+            for i in range(len(valid_data)):
+                for j in range(len(valid_data["sentence"][i])):
+                    valid_data["sentence"][i][j] = valid_data["sentence"][i][j].replace(c, "")
 
         for c in "()[]":
-            valid_data["sentence"] = valid_data["sentence"].str.replace(c, " ")
+            for i in range(len(valid_data)):
+                for j in range(len(valid_data["sentence"][i])):
+                    valid_data["sentence"][i][j] = valid_data["sentence"][i][j].replace(c, " ")
 
         valid_data.to_pickle(f"./data/valid_df.pickle")
         with open("./data/valid_ext_list_hit", "wb") as f:
@@ -106,25 +129,34 @@ def load_data(mode: str):
 
             for article in train:
                 original = article['article_original']
+                # print(original)
+                # break
 
-                sent_list += original
+                sent_list += [original]
 
             print(len(sent_list))
 
-            sent_list = sent_list
+            # sent_list = sent_list
 
-            test_data = pd.DataFrame(list(sent_list),
+            test_data = pd.DataFrame(list(zip(sent_list)),
                                       columns=['sentence'])
 
             for c in ",.:;":
-                test_data["sentence"] = test_data["sentence"].str.replace(c, "")
+                for i in range(len(test_data)):
+                    for j in range(len(test_data["sentence"][i])):
+                        test_data["sentence"][i][j] = test_data["sentence"][i][j].replace(c, "")
 
             for c in "()[]":
-                test_data["sentence"] = test_data["sentence"].str.replace(c, " ")
+                for i in range(len(test_data)):
+                    for j in range(len(test_data["sentence"][i])):
+                        test_data["sentence"][i][j] = test_data["sentence"][i][j].replace(c, " ")
 
             test_data.to_pickle(f"./data/{mode}_df.pickle")
 if __name__ == '__main__':
     split_data()
+    print("processing train...")
     load_data('train')
+    print("processing valid...")
     load_data('valid')
+    print("processing test...")
     load_data('test')
