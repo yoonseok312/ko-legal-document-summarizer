@@ -91,7 +91,7 @@ def load_data(mode: str):
             ext_list = article['extractive']
 
             original = article['article_original']
-            if_ext = [ext_list for sent_num in range(len(original))]
+            if_ext = [int(sent_num in ext_list) for sent_num in range(len(original))]
 
             article_ext += ext_list
             # print(original)
