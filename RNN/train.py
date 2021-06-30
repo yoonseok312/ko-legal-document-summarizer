@@ -4,20 +4,21 @@ from torch.autograd import Variable
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from model import RNNModel
+from LSTM import LSTMModel
 from rnn_tokenize import tokenize, create_dataset
 import numpy as np
 import random
 import pickle
 
 def train():
-    batch_size = 1024
+    batch_size = 32
     n_iters = 20000
     visible_gpus = 0
     seed = 777
     # Create RNN
-    input_dim = 10  # input dimension
-    hidden_dim = 10  # hidden layer dimension
-    layer_dim = 5  # number of hidden layers
+    input_dim = 128  # input dimension
+    hidden_dim = 256  # hidden layer dimension
+    layer_dim = 1  # number of hidden layers
     output_dim = 2  # output dimension
     seq_len = 20
 
@@ -69,7 +70,10 @@ def train():
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test, batch_size=batch_size, shuffle=False)
 
-    model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+    model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+
+    if torch.cuda.is_available():
+        model.cuda()
 
     # Cross Entropy Loss
     error = nn.CrossEntropyLoss()
@@ -86,8 +90,13 @@ def train():
     for epoch in range(num_epochs):
         for i, (images, labels) in enumerate(train_loader):
 
-            train = Variable(images.view(-1, seq_len, input_dim))
+
+            train = Variable(images.view(-1, seq_len, input_dim)).requires_grad_()
             labels = Variable(labels)
+
+            if torch.cuda.is_available():
+                train.cuda()
+                labels.cuda()
 
             # Clear gradients
             optimizer.zero_grad()
@@ -107,7 +116,7 @@ def train():
 
             count += 1
 
-            if count % 25 == 0:
+            if count % 50 == 0:
                 # Calculate Accuracy
                 correct = 0
                 total = 0
@@ -136,11 +145,9 @@ def train():
                 loss_list.append(loss.data)
                 iteration_list.append(count)
                 accuracy_list.append(accuracy)
-                if count % 50 == 0:
-                    # Print Loss
-                    print('Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(count, loss.data, accuracy, hit_rate))
-                    if count % 500 == 0:
-                        torch.save(model.state_dict(), './model/seq_len/model_' + str(count) + '.pth')
+                print('Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(count, loss.data, accuracy, hit_rate))
+                if count % 500 == 0:
+                    torch.save(model.state_dict(), './model/seq_len/model_' + str(count) + '.pth')
 
 def get_sub_list(output_list, metadata):
     sub = []
@@ -166,7 +173,6 @@ def get_sub_list(output_list, metadata):
 
 
 def calc_hit_rate(output_list, metadata):
-    print('calc')
     count_mom = 0
     count_son = 0
     sub = get_sub_list(output_list, metadata)
