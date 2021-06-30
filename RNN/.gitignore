@@ -2,3 +2,4 @@ data/
 output/
 model/
 __pycache__/
+logdir/
