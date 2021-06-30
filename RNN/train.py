@@ -15,18 +15,18 @@ def train():
     #tensorboard settings
     writer =  SummaryWriter()
 
-
     # LSTM configs
     batch_size = 32
     n_iters = 50000
     visible_gpus = 0
     seed = 7777
+
     # Create RNN
     input_dim = 128  # input dimension
     hidden_dim = 256  # hidden layer dimension
     layer_dim = 4  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 40
+    seq_len = 50
 
     # RNN configs
     # batch_size = 32
@@ -115,7 +115,7 @@ def train():
 
     # Adam Optimizer
     learning_rate = 0.05
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     loss_list = []
     iteration_list = []
@@ -152,7 +152,7 @@ def train():
             count += 1
             
             writer.add_scalar('train loss', loss.data ,count)
-            if count % 50 == 0:
+            if count % 500 == 0:
                 # Calculate Accuracy
                 correct = 0
                 total = 0
@@ -185,7 +185,7 @@ def train():
                 iteration_list.append(count)
                 accuracy_list.append(accuracy)
                 print('Epoch: {} Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(epoch, count, loss.data, accuracy, hit_rate))
-                if count % 500 == 0:
+                if count % 1000 == 0:
                     torch.save(model.state_dict(), f'./model/seq_len_{seq_len}/model_{str(count)}.pth')
     writer.close()
 def get_sub_list(output_list, metadata):
