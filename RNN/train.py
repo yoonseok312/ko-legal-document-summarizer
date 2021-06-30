@@ -89,13 +89,15 @@ def train():
     target_tensor_train = torch.from_numpy(np.array(target_train, dtype=np.float64)).float().type(torch.LongTensor)
     target_tensor_test = torch.from_numpy(np.array(target_test, dtype=np.float64)).float().type(torch.LongTensor)
 
-    print(input_tensor_train.shape, target_tensor_train.shape)
+
+    # print(input_tensor_train.shape, target_tensor_train.shape)
 
     # print(input_tensor_train.shape, target_tensor_train.shape)
 
     # Pytorch train and test sets
     train = TensorDataset(input_tensor_train, target_tensor_train)
     test = TensorDataset(input_tensor_test, target_tensor_test)
+
 
     # data loader
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=False)
@@ -145,6 +147,13 @@ def train():
             # Forward propagation
             outputs = model(train)
 
+            # print(outputs.shape)
+            # print(labels.shape)
+
+            labels = torch.flatten(labels)
+
+            # print(labels.shape)
+
             # Calculate softmax and ross entropy loss
 
             loss = error(outputs, labels.to(device=device))
@@ -163,7 +172,7 @@ def train():
                 total = 0
                 # Iterate through test dataset
                 valid_output_list = []
-                for images, labels in test_loader:
+                for i, (images, labels) in enumerate(test_loader):
                     images = Variable(images.view(-1, seq_len, input_dim))
 
                     # Forward propagation
@@ -173,6 +182,13 @@ def train():
 
                     # Get predictions from the maximum value
                     predicted = torch.max(outputs.data, 1)[1]
+
+                    print("test")
+
+                    print("label", labels.shape)
+                    labels = torch.flatten(labels)
+                    print("flatten", labels.shape)
+                    print("size 0", labels.size(0))
 
                     # Total number of labels
                     total += labels.size(0)

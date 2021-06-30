@@ -132,6 +132,7 @@ def create_dataset(
             article_list += [[0] * input_dim * seq_len]
         input_train += [article_list]
 
+
     input_valid = []
     for article in tqdm(tokenized_valid_data):
         article_list = []

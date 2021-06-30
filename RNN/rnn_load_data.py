@@ -16,7 +16,7 @@ def split_data():
         train = json.load(st_json)
 
         df = pd.DataFrame(train)
-        df = df[0:10]
+        df = df[0:100]
 
         ratio = 0.9
         id_by_length = collections.defaultdict(list)
@@ -24,6 +24,7 @@ def split_data():
         print(len(df))
         train_ids = []
         valid_ids = []
+
 
         for i in range(total_dataset_size):
             id_by_length[len(df.iloc[i]['article_original'])].append(df.iloc[i]['id'])
@@ -94,18 +95,14 @@ def load_data(mode: str):
 
         for index, article in valid.iterrows():
             ext_list = article['extractive']
-
             original = article['article_original']
             if_ext = [int(sent_num in ext_list) for sent_num in range(len(original))]
 
             article_ext += ext_list
+            valid_sent_list += [original]
             valid_ext_list += [if_ext]
             # print(original)
             # article += original
-
-
-            valid_sent_list += [original]
-            valid_ext_list += if_ext
             valid_ext_list_hit.append((ext_list, len(original)))
 
         print(len(article))
