@@ -21,27 +21,37 @@ def make_submission():
     # output_dim = 2  # output dimension
     # visible_gpus = 0
     # seq_len = 20
-
-    #LSTM
-    batch_size = 32
-    n_iters = 20000
+    batch_size = 16
+    n_iters = 40000
     visible_gpus = 0
     seed = 777
     # Create RNN
     input_dim = 128  # input dimension
     hidden_dim = 256  # hidden layer dimension
-    layer_dim = 1  # number of hidden layers
+    layer_dim = 4  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 20
+    seq_len = 40
+
+    #LSTM
+    # batch_size = 32
+    # n_iters = 20000
+    # visible_gpus = 0
+    # seed = 777
+    # # Create RNN
+    # input_dim = 128  # input dimension
+    # hidden_dim = 256  # hidden layer dimension
+    # layer_dim = 1  # number of hidden layers
+    # output_dim = 2  # output dimension
+    # seq_len = 20
 
     device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
     device_id = 0 if device == f"cuda" else -1
 
-    # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
-    model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device).to(device=device)
-    model.load_state_dict((torch.load('./model/seq_len/model_16500.pth')))
+    model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+    # model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device).to(device=device)
+    model.load_state_dict((torch.load('./model/rnn_seq_len_40/model_15000.pth')))
 
-    train_data = pd.read_pickle(f"./data/train_df.pickle")
+    # train_data = pd.read_pickle(f"./data/train_df.pickle")
     tokenized_data, tokenized_valid_data, embedding_model,  train_data, valid_data, l_tokenizer = tokenize(input_dim)
 
     word_extractor = WordExtractor()
@@ -89,11 +99,10 @@ def make_submission():
 
     print("Loaded test dataset")
 
-    seq_dim = 20
     output_list = []
     count = 0
     for i, (images, labels) in enumerate(test_loader):
-        for_test = Variable(images.view(-1, seq_dim, input_dim))
+        for_test = Variable(images.view(-1, seq_len, input_dim))
 
         if torch.cuda.is_available():
             for_test.to(device=f"cuda:{visible_gpus}")
@@ -134,7 +143,7 @@ def make_submission():
         for i in range(3):
             submission_template[n]['summary_index' + str(i + 1)] = sub[n][i][0]
 
-    with open("./output/submission_lstm.json", "w") as json_file:
+    with open("./output/submission_rnn_40.json", "w") as json_file:
         json.dump(submission_template, json_file)
 
 if __name__ == '__main__':

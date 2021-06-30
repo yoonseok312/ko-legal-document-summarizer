@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from model import RNNModel
 from LSTM import LSTMModel
+from TransformerEncoder import TransformerEncoder
 from rnn_tokenize import tokenize, create_dataset
 import numpy as np
 import random
@@ -16,7 +17,6 @@ def train():
     # n_iters = 20000
     # visible_gpus = 0
     # seed = 777
-    # # Create RNN
     # input_dim = 128  # input dimension
     # hidden_dim = 256  # hidden layer dimension
     # layer_dim = 1  # number of hidden layers
@@ -24,16 +24,16 @@ def train():
     # seq_len = 20
 
     # RNN configs
-    batch_size = 32
+    batch_size = 16
     n_iters = 40000
     visible_gpus = 0
     seed = 777
     # Create RNN
-    input_dim = 128  # input dimension
-    hidden_dim = 256  # hidden layer dimension
-    layer_dim = 4  # number of hidden layers
+    input_dim = 10  # input dimension
+    hidden_dim = 10  # hidden layer dimension
+    layer_dim = 1  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 50
+    seq_len = 4
 
     # batch_size = 256
     # n_iters = 20000
@@ -94,11 +94,20 @@ def train():
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test, batch_size=batch_size, shuffle=False)
 
-    model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+    # model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
     # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+    model = TransformerEncoder(
+        d_model=input_dim,
+        d_ff=hidden_dim,
+        heads=1,
+        dropout=0.1,
+        num_inter_layers=layer_dim,
+        output_dim=output_dim,
+        device=device
+    )
 
-    # if torch.cuda.is_available():
-    #     model.to(device=f"cuda:{visible_gpus}")
+    if torch.cuda.is_available():
+        model.to(device=f"cuda:{visible_gpus}")
 
     # Cross Entropy Loss
     error = nn.CrossEntropyLoss()
@@ -172,7 +181,7 @@ def train():
                 accuracy_list.append(accuracy)
                 print('Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(count, loss.data, accuracy, hit_rate))
                 if count % 500 == 0:
-                    torch.save(model.state_dict(), './model/seq_len_80/model_' + str(count) + '.pth')
+                    torch.save(model.state_dict(), './model/rnn_seq_len_40/model_' + str(count) + '.pth')
 
 def get_sub_list(output_list, metadata):
     sub = []
