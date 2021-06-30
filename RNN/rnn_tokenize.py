@@ -17,12 +17,14 @@ import json
 def tokenize(input_dim: int):
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")
+    valid_data = pd.read_pickle(f"./data/valid_df.pickle")
     test_data = pd.read_pickle(f"./data/test_df.pickle")
 
     train_sent = train_data['sentence']
+    valid_sent = valid_data['sentence']
     test_sent = test_data['sentence']
 
-    all_sent = pd.concat([train_sent, test_sent])
+    all_sent = pd.concat([train_sent, valid_sent, test_sent])
 
     word_extractor = WordExtractor()
     word_extractor.train(all_sent)
@@ -32,21 +34,28 @@ def tokenize(input_dim: int):
     l_tokenizer = LTokenizer(scores=scores)
     tokenized_all_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in all_sent]
     tokenized_train_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in train_sent]
+    tokenized_valid_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in valid_sent]
     # tokenized_test_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in test_data['sentence']]
     # tokenized_all_data = tokenized_train_data + tokenized_test_data
 
     embedding_model = Word2Vec(sentences=tokenized_all_data, vector_size=input_dim, window=8, min_count=1, workers=16, sg=0)
 
-    return tokenized_train_data, embedding_model, l_tokenizer
+    return tokenized_train_data, tokenized_valid_data, embedding_model, train_data, valid_data, l_tokenizer
 
-def create_dataset(tokenized_data: List, embedding_model: Word2Vec, input_dim: int, seq_len: int):
+def create_dataset(
+        tokenized_train_data: List,
+        tokenized_valid_data: List,
+        embedding_model: Word2Vec,
+        input_dim: int,
+        seq_len: int,
+        train_data,
+        valid_data
+):
 
     print("Start")
-
-    train_data = pd.read_pickle(f"./data/train_df.pickle")
-    input_list = []
+    input_train = []
     zero_list = [0] * input_dim
-    for sent in tqdm(tokenized_data):
+    for sent in tqdm(tokenized_train_data):
         temp_list = []
         sent = sent[-seq_len:]
         for word_count, word in enumerate(sent):
@@ -57,16 +66,31 @@ def create_dataset(tokenized_data: List, embedding_model: Word2Vec, input_dim: i
             else:
                 temp_list += zero_list
         temp_list = zero_list * (seq_len - len(sent)) + temp_list
-        input_list += temp_list
+        input_train += [temp_list]
 
-    target_list = [train_data['if_ext']]
+    input_valid = []
+    for sent in tqdm(tokenized_valid_data):
+        temp_list = []
+        sent = sent[-seq_len:]
+        for word_count, word in enumerate(sent):
+            if word_count == seq_len:
+                break
+            if word in embedding_model.wv:
+                temp_list += list(rating for rating in embedding_model.wv[word])
+            else:
+                temp_list += [0] * input_dim
+        temp_list = [0] * input_dim * (seq_len - len(sent)) + temp_list
+        input_valid += [temp_list]
 
     print("loop end")
 
-    input_train, input_test, target_train, target_test = train_test_split(np.array(input_list),
-                                                                              np.array(target_list),
-                                                                              test_size=0.2,
-                                                                              random_state=42)
+    target_train = list(train_data['if_ext'])
+    target_valid = list(valid_data['if_ext'])
+
+    # input_train, input_test, target_train, target_test = train_test_split(np.array(input_list),
+    #                                                                           np.array(target_list),
+    #                                                                           test_size=0.2,
+    #                                                                           random_state=42)
 
     print("dataset end")
-    return input_list, input_train, input_test, target_train, target_test
+    return input_train, input_valid, target_train, target_valid

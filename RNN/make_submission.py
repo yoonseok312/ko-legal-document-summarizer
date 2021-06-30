@@ -28,7 +28,7 @@ def make_submission():
     model.load_state_dict((torch.load('./model/model_5000.pth')))
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")
-    tokenized_data, embedding_model, l_tokenizer = tokenize(input_dim)
+    tokenized_data, tokenized_valid_data, embedding_model,  train_data, valid_data, l_tokenizer = tokenize(input_dim)
 
     word_extractor = WordExtractor()
     word_extractor.train(train_data['sentence'])
