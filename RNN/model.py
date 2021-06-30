@@ -33,5 +33,7 @@ class RNNModel(nn.Module):
 
         # One time step
         out, hn = self.rnn(x, h0)
+        # print("rnn output", out.shape)
         out = self.fc(out[:, -1, :])
+        # out = self.fc(out)
         return out

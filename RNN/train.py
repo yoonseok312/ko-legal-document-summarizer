@@ -13,27 +13,27 @@ import pickle
 
 def train():
     # LSTM configs
-    # batch_size = 32
-    # n_iters = 20000
-    # visible_gpus = 0
-    # seed = 777
-    # input_dim = 128  # input dimension
-    # hidden_dim = 256  # hidden layer dimension
-    # layer_dim = 1  # number of hidden layers
-    # output_dim = 2  # output dimension
-    # seq_len = 20
-
-    # RNN configs
-    batch_size = 16
-    n_iters = 40000
+    batch_size = 8
+    n_iters = 20000
     visible_gpus = 0
     seed = 777
-    # Create RNN
-    input_dim = 10  # input dimension
-    hidden_dim = 10  # hidden layer dimension
+    input_dim = 128  # input dimension
+    hidden_dim = 256  # hidden layer dimension
     layer_dim = 1  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 4
+    seq_len = 20
+
+    # RNN configs
+    # batch_size = 16
+    # n_iters = 40000
+    # visible_gpus = 0
+    # seed = 777
+    # # Create RNN
+    # input_dim = 10  # input dimension
+    # hidden_dim = 10  # hidden layer dimension
+    # layer_dim = 1  # number of hidden layers
+    # output_dim = 2  # output dimension
+    # seq_len = 4
 
     # batch_size = 256
     # n_iters = 20000
@@ -61,7 +61,7 @@ def train():
     np.random.seed(seed)
 
     tokenized_data, tokenized_valid_data, embedding_model, train_data, valid_data, _ = tokenize(input_dim)
-    input_train, input_test, target_train, target_test = create_dataset(
+    input_train, input_test, target_train, target_test, pad_mask_train, pad_mask_valid = create_dataset(
         tokenized_data,
         tokenized_valid_data,
         embedding_model,
@@ -94,14 +94,21 @@ def train():
 
     # print(input_tensor_train.shape, target_tensor_train.shape)
 
+    pad_mask_train = torch.LongTensor(pad_mask_train)
+    pad_mask_valid = torch.LongTensor(pad_mask_valid)
+
     # Pytorch train and test sets
-    train = TensorDataset(input_tensor_train, target_tensor_train)
-    test = TensorDataset(input_tensor_test, target_tensor_test)
+    train = TensorDataset(input_tensor_train, target_tensor_train, pad_mask_train)
+    test = TensorDataset(input_tensor_test, target_tensor_test, pad_mask_valid)
+
+    print("TensorDataset created")
 
 
     # data loader
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test, batch_size=batch_size, shuffle=False)
+
+    print("Dataloader created")
 
     # model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
     model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
@@ -131,7 +138,7 @@ def train():
     count = 0
     print("training start")
     for epoch in range(num_epochs):
-        for i, (images, labels) in enumerate(train_loader):
+        for i, (images, labels, pad_train) in enumerate(train_loader):
 
 
             train = Variable(images.view(-1, seq_len, input_dim)).requires_grad_()
@@ -150,13 +157,28 @@ def train():
             # print(outputs.shape)
             # print(labels.shape)
 
+            # labels = torch.flatten(labels)
+            # if batch_size * (i+1) <= len(pad_mask_train):
+            #     pad_mask_train = pad_mask_train[batch_size * i:batch_size * (i+1)]
+            # else:
+            #     print("else")
+            #     pad_mask_train = pad_mask_train[batch_size * i:len(pad_mask_train)]
+            # print("pad", pad_train.shape)
+            # print("label", labels.shape)
+            # print("output", outputs.shape)
+            nonzeros = torch.nonzero(torch.LongTensor(pad_train), as_tuple=True)
+            labels = labels[nonzeros[0], nonzeros[1]]
+            outputs = outputs[nonzeros[0] * nonzeros[1]]
             labels = torch.flatten(labels)
 
             # print(labels.shape)
 
             # Calculate softmax and ross entropy loss
 
-            loss = error(outputs, labels.to(device=device))
+            # print("output", outputs)
+            # print("label", labels)
+
+            loss = error(outputs, labels.to(device=device)) # .to(device=device)
 
             # Calculating gradients
             loss.backward()
@@ -172,39 +194,52 @@ def train():
                 total = 0
                 # Iterate through test dataset
                 valid_output_list = []
-                for i, (images, labels) in enumerate(test_loader):
+                for i, (images, labels, pad_valid) in enumerate(test_loader):
                     images = Variable(images.view(-1, seq_len, input_dim))
 
                     # Forward propagation
                     outputs = model(images)
+
+                    # print("output", outputs.shape)
+
+                    # outputs = outputs[nonzeros[0], nonzeros[1]]
+                    nonzeros = torch.nonzero(torch.LongTensor(pad_valid), as_tuple=True)
+                    outputs = outputs[nonzeros[0] * nonzeros[1]]
 
                     valid_output_list += outputs
 
                     # Get predictions from the maximum value
                     predicted = torch.max(outputs.data, 1)[1]
 
-                    print("test")
-
-                    print("label", labels.shape)
+                    # print("test")
+                    #
+                    # print("label", labels.shape)
+                    # labels = torch.flatten(labels)
+                    labels = labels[nonzeros[0], nonzeros[1]]
                     labels = torch.flatten(labels)
-                    print("flatten", labels.shape)
-                    print("size 0", labels.size(0))
+
+                    # print("flatten", labels.shape)
+                    # print("size 0", labels.size(0))
 
                     # Total number of labels
+                    # print("label", labels.shape)
                     total += labels.size(0)
 
                     correct += (predicted == labels.to(device=device)).sum()
 
-                accuracy = 100 * correct / float(total)
-                hit_rate = calc_hit_rate(valid_output_list, valid_ext_list_hit)
+                if total == 0:
+                    print("Can't calculate accuracy & hit rate")
+                else:
+                    accuracy = 100 * correct / float(total)
+                    hit_rate = calc_hit_rate(valid_output_list, valid_ext_list_hit)
 
                 # store loss and iteration
-                loss_list.append(loss.data)
-                iteration_list.append(count)
-                accuracy_list.append(accuracy)
-                print('Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(count, loss.data, accuracy, hit_rate))
+                    loss_list.append(loss.data)
+                    iteration_list.append(count)
+                    accuracy_list.append(accuracy)
+                    print('Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(count, loss.data, accuracy, hit_rate))
                 if count % 500 == 0:
-                    torch.save(model.state_dict(), './model/rnn_seq_len_40/model_' + str(count) + '.pth')
+                    torch.save(model.state_dict(), './model/article_rnn/model_' + str(count) + '.pth')
 
 def get_sub_list(output_list, metadata):
     sub = []

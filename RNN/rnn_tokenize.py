@@ -157,14 +157,21 @@ def create_dataset(
     print("loop end")
 
     target_train = []
+    pad_mask_train = []
     for item in list(train_data['if_ext']):
+        temp = []
         # while len(item) < 50:
-        target_train += [item + [0] * (50 - len(item))]
+        target_train += [item + [-1] * (50 - len(item))]
+        pad_mask_train += [[1] * len(item) + [0] * (50 - len(item))]
+        # print("target", len(target_train))
+        # print("pad", len(pad_mask_train))
 
     target_valid = []
+    pad_mask_valid = []
     for item in list(valid_data['if_ext']):
         # while len(item) < 50:
-        target_valid += [item + [0] * (50 - len(item))]
+        target_valid += [item + [-1] * (50 - len(item))]
+        pad_mask_valid += [[1] * len(item) + [0] * (50 - len(item))]
 
     # target_train = list(train_data['if_ext'])
     # target_valid = list(valid_data['if_ext'])
@@ -175,4 +182,6 @@ def create_dataset(
     #                                                                           random_state=42)
 
     print("dataset end")
-    return input_train, input_valid, target_train, target_valid
+    # print("tgt", target_train.shape)
+    # print("pad", pad_mask_train.shape)
+    return input_train, input_valid, target_train, target_valid, pad_mask_train, pad_mask_valid
