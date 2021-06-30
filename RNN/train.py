@@ -9,7 +9,6 @@ from rnn_tokenize import tokenize, create_dataset
 import numpy as np
 import random
 import pickle
-from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
 def train():
@@ -115,7 +114,7 @@ def train():
     error = nn.CrossEntropyLoss()
 
     # Adam Optimizer
-    learning_rate = 1e-2
+    learning_rate = 0.05
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     loss_list = []
@@ -188,7 +187,7 @@ def train():
                 print('Epoch: {} Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(epoch, count, loss.data, accuracy, hit_rate))
                 if count % 500 == 0:
                     torch.save(model.state_dict(), f'./model/seq_len_{seq_len}/model_{str(count)}.pth')
-
+    writer.close()
 def get_sub_list(output_list, metadata):
     sub = []
     sent_count = 0
