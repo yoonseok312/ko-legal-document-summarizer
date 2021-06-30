@@ -7,7 +7,7 @@ import collections
 
 PROJECT_DIR = os.getcwd()
 print(PROJECT_DIR)
-
+seed = 7777
 DATA_DIR = f'{PROJECT_DIR}/data'
 RAW_DATA_DIR = DATA_DIR + '/raw'
 
@@ -16,7 +16,7 @@ def split_data():
         train = json.load(st_json)
 
         df = pd.DataFrame(train)
-
+        
         ratio = 0.9
         id_by_length = collections.defaultdict(list)
         total_dataset_size = len(df)
@@ -27,6 +27,8 @@ def split_data():
             id_by_length[len(df.iloc[i]['article_original'])].append(df.iloc[i]['id'])
 
         for length, idxs in id_by_length.items():
+            random.seed(seed)
+            random.shuffle(idxs)
             split_point = int(len(idxs) * (1 - ratio))
             valid_ids += idxs[0:split_point]
             train_ids += idxs[split_point:]
@@ -36,6 +38,12 @@ def split_data():
 
         train_df.reset_index(inplace=True, drop=True)
         valid_df.reset_index(inplace=True, drop=True)
+        
+        #check results
+        train_ids_set = set(train_ids)
+        valid_ids_set = set(valid_ids)
+        print(f'train size : {len(train_df)}, valid size : {len(valid_df)}, overlapping data: {len(train_ids_set & valid_ids_set)}')
+        
 
         # save df
         train_df.to_pickle("./data/train_unprocessed_df.pickle")
@@ -123,7 +131,7 @@ def load_data(mode: str):
                 test_data["sentence"] = test_data["sentence"].str.replace(c, " ")
 
             test_data.to_pickle(f"./data/{mode}_df.pickle")
-            
+
 if __name__ == '__main__':
     split_data()
     load_data('train')

@@ -30,7 +30,7 @@ def make_submission():
     # Create RNN
     input_dim = 128  # input dimension
     hidden_dim = 256  # hidden layer dimension
-    layer_dim = 1  # number of hidden layers
+    layer_dim = 4  # number of hidden layers
     output_dim = 2  # output dimension
     seq_len = 20
 

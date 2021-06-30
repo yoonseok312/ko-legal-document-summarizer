@@ -9,19 +9,25 @@ from rnn_tokenize import tokenize, create_dataset
 import numpy as np
 import random
 import pickle
+from tqdm import tqdm
+from tensorboardX import SummaryWriter
 
 def train():
+    #tensorboard settings
+    writer =  SummaryWriter()
+
+
     # LSTM configs
     batch_size = 32
     n_iters = 50000
     visible_gpus = 0
-    seed = 777
+    seed = 7777
     # Create RNN
     input_dim = 128  # input dimension
     hidden_dim = 256  # hidden layer dimension
-    layer_dim = 5  # number of hidden layers
+    layer_dim = 4  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 20
+    seq_len = 40
 
     # RNN configs
     # batch_size = 32
@@ -71,12 +77,14 @@ def train():
         valid_data
     )
 
+    print("opening  valid_ext_list_hit")
     with open("./data/valid_ext_list_hit", "rb") as f:
         valid_ext_list_hit = pickle.load(f)
 
     num_epochs = n_iters / (len(input_train) / batch_size)
     num_epochs = int(num_epochs)
 
+    print("running from_numpy")
     # Pytorch train and test sets
     input_tensor_train = torch.from_numpy(np.array(input_train, dtype=np.float64)).float()
     input_tensor_test = torch.from_numpy(np.array(input_test, dtype=np.float64)).float()
@@ -87,13 +95,16 @@ def train():
     # print(input_tensor_train.shape, target_tensor_train.shape)
 
     # Pytorch train and test sets
+    print("running tensorDataset")
     train = TensorDataset(input_tensor_train, target_tensor_train)
     test = TensorDataset(input_tensor_test, target_tensor_test)
 
+    print("running dataloader")
     # data loader
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test, batch_size=batch_size, shuffle=False)
 
+    print("initializing lstm model")
     model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
     # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
 
@@ -103,9 +114,9 @@ def train():
     # Cross Entropy Loss
     error = nn.CrossEntropyLoss()
 
-    # SGD Optimizer
-    learning_rate = 0.05
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    # Adam Optimizer
+    learning_rate = 1e-2
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     loss_list = []
     iteration_list = []
@@ -140,7 +151,8 @@ def train():
             optimizer.step()
 
             count += 1
-
+            
+            writer.add_scalar('train loss', loss.data ,count)
             if count % 50 == 0:
                 # Calculate Accuracy
                 correct = 0
@@ -166,11 +178,14 @@ def train():
                 accuracy = 100 * correct / float(total)
                 hit_rate = calc_hit_rate(valid_output_list, valid_ext_list_hit)
 
+                writer.add_scalar('accuracy', accuracy, count)
+                writer.add_scalar('hit rate', hit_rate, count)
+
                 # store loss and iteration
                 loss_list.append(loss.data)
                 iteration_list.append(count)
                 accuracy_list.append(accuracy)
-                print('Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(count, loss.data, accuracy, hit_rate))
+                print('Epoch: {} Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(epoch, count, loss.data, accuracy, hit_rate))
                 if count % 500 == 0:
                     torch.save(model.state_dict(), f'./model/seq_len_{seq_len}/model_{str(count)}.pth')
 
@@ -201,7 +216,7 @@ def calc_hit_rate(output_list, metadata):
     count_mom = 0
     count_son = 0
     sub = get_sub_list(output_list, metadata)
-    print(len(sub), len(metadata))
+    #print(len(sub), len(metadata))
     for n, result in enumerate(sub):
         for sub_num, _ in result:
             if sub_num in metadata[n][0]:
