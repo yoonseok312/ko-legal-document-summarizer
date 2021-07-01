@@ -14,7 +14,6 @@ import numpy as np
 from typing import List
 import json
 
-
 def tokenize(input_dim: int):
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")

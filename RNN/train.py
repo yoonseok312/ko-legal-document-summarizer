@@ -24,11 +24,11 @@ def train():
     seed = 7777
 
     # Create RNN
-    input_dim = 128  # input dimension
-    hidden_dim = 256  # hidden layer dimension
+    input_dim = 10  # input dimension
+    hidden_dim = 10  # hidden layer dimension
     layer_dim = 1  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 20
+    seq_len = 5
 
     # RNN configs
     # batch_size = 32
@@ -97,6 +97,7 @@ def train():
 
     # Pytorch train and test sets
     print("running tensorDataset")
+    print("shape", input_tensor_train.shape, target_tensor_train.shape)
     train = TensorDataset(input_tensor_train, target_tensor_train)
     test = TensorDataset(input_tensor_test, target_tensor_test)
 

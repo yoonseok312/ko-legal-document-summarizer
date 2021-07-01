@@ -19,7 +19,7 @@ def split_data():
 
         df = pd.DataFrame(train)
 
-        # df = df[0:1000]
+        df = df[0:100]
 
 
         ratio = 0.9
