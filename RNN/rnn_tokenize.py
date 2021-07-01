@@ -44,6 +44,7 @@ def tokenize(input_dim: int):
 
     return tokenized_train_data, tokenized_valid_data, embedding_model, target_train, target_valid, l_tokenizer
 
+
 def create_dataset(
         tokenized_train_data: List,
         tokenized_valid_data: List,

@@ -19,7 +19,8 @@ def split_data():
         df = pd.DataFrame(train)
 
         # df = df[0:1000]
-        
+
+
         ratio = 0.9
         id_by_length = collections.defaultdict(list)
         total_dataset_size = len(df)

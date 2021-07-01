@@ -24,7 +24,7 @@ def make_submission():
     # seq_len = 20
 
     # LSTM configs
-    batch_size = 16
+    batch_size = 32
     n_iters = 50000
     visible_gpus = 0
     seed = 7777
@@ -32,7 +32,7 @@ def make_submission():
     # Create RNN
     input_dim = 128  # input dimension
     hidden_dim = 256  # hidden layer dimension
-    layer_dim = 1  # number of hidden layers
+    layer_dim = 4  # number of hidden layers
     output_dim = 2  # output dimension
     seq_len = 20
 
@@ -43,10 +43,10 @@ def make_submission():
 
     # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
     model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device).to(device=device)
-    model.load_state_dict((torch.load('./model/generator/model_38500.pth')))
+    model.load_state_dict((torch.load('./model/ensemble/model_26000.pth')))
 
     rnn_model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device).to(device=device)
-    rnn_model.load_state_dict((torch.load('./model/generator/rnn_model_38500.pth')))
+    rnn_model.load_state_dict((torch.load('./model/ensemble/rnn_model_29000.pth')))
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")
     tokenized_data, tokenized_valid_data, embedding_model, target_train, target_test, l_tokenizer = tokenize(input_dim)
@@ -73,6 +73,7 @@ def make_submission():
         test_data["sentence"] = test_data["sentence"].str.replace(c, " ")
 
     tokenized_test_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in test_data['sentence']]
+
 
     test_list = []
     zero_list = [0] * input_dim
@@ -143,7 +144,7 @@ def make_submission():
         for i in range(3):
             submission_template[n]['summary_index' + str(i + 1)] = sub[n][i][0]
 
-    with open("./output/ensemble.json", "w") as json_file:
+    with open("./output/ensemble_after_train.json", "w") as json_file:
         json.dump(submission_template, json_file)
 
 if __name__ == '__main__':

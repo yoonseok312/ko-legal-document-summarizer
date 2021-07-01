@@ -17,13 +17,14 @@ class LSTMModel(nn.Module):
         # LSTM
         self.lstm = nn.LSTM(input_dim, hidden_dim, layer_dim,
                             batch_first=True).to(device=device)
-        self.generator = Generator(hidden_dim, output_dim)
+        # self.generator = Generator(hidden_dim, output_dim)
         # batch_first=True (batch_dim, seq_dim, feature_dim)
 
         # Readout layer
         self.fc = nn.Linear(hidden_dim, output_dim)
 
         self.device = device
+
 
     def forward(self, x):
         # Initialize hidden state with zeros
