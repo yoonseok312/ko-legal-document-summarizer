@@ -24,12 +24,12 @@ def hit_rate_stat():
     output_dim = 2  # output dimension
     seq_len = 20
 
-    device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
-    device_id = 0 if device == f"cuda" else -1
+    device = "cpu" 
+    device_id = -1
 
     # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
     model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device).to(device=device)
-    model.load_state_dict((torch.load('./model/seq_len/model_16500.pth')))
+    model.load_state_dict(torch.load('./model/seq_len/model_26000.pth', map_location=torch.device('cpu')))
 
     tokenized_data, tokenized_valid_data, embedding_model,  train_data, valid_data, l_tokenizer = tokenize(input_dim)
 
