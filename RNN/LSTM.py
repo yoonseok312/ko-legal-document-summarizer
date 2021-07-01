@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.autograd import Variable
 
 
@@ -15,7 +16,9 @@ class LSTMModel(nn.Module):
 
         # LSTM
         self.lstm = nn.LSTM(input_dim, hidden_dim, layer_dim,
-                            batch_first=True).to(device=device)  # batch_first=True (batch_dim, seq_dim, feature_dim)
+                            batch_first=True).to(device=device)
+        self.generator = Generator(hidden_dim, output_dim)
+        # batch_first=True (batch_dim, seq_dim, feature_dim)
 
         # Readout layer
         self.fc = nn.Linear(hidden_dim, output_dim)
@@ -39,5 +42,29 @@ class LSTMModel(nn.Module):
         # out.size() --> 100, 28, 100
         # out[:, -1, :] --> 100, 100 --> just want last time step hidden states!
         out = self.fc(out[:, -1, :])
+        # out = self.generator(out[:, -1, :])
         # out.size() --> 100, 10
         return out
+
+class Generator(nn.Module):
+    def __init__(self, d_model, output_dim, hp=None):
+        super().__init__()
+        self.fc_1 = nn.Linear(d_model, int(d_model / 2))
+        self.fc_2 = nn.Linear(int(d_model / 2), int(d_model / 4))
+        self.fc_3 = nn.Linear(int(d_model / 4), output_dim)
+
+        self.ln_1 = nn.LayerNorm(int(d_model / 2))
+        self.ln_2 = nn.LayerNorm(int(d_model / 4))
+
+    def forward(self, x):
+        h = self.fc_1(x)
+        h = self.ln_1(h)
+        h = F.relu(h)
+
+        h = self.fc_2(h)
+        h = self.ln_2(h)
+        h = F.relu(h)
+
+        h = self.fc_3(h)
+        h = torch.sigmoid(h)
+        return h

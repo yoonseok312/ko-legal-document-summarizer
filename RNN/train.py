@@ -18,7 +18,7 @@ def train():
     writer =  SummaryWriter()
 
     # LSTM configs
-    batch_size = 32
+    batch_size = 16
     n_iters = 50000
     visible_gpus = 0
     seed = 7777
@@ -26,19 +26,20 @@ def train():
     # Create RNN
     input_dim = 128  # input dimension
     hidden_dim = 256  # hidden layer dimension
-    layer_dim = 4  # number of hidden layers
+    layer_dim = 1  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 40
+    seq_len = 20
 
     # RNN configs
     # batch_size = 32
     # n_iters = 40000
     # visible_gpus = 0
     # seed = 777
-    # # Create RNN
+    # Create RNN
+
     # input_dim = 128  # input dimension
     # hidden_dim = 256  # hidden layer dimension
-    # layer_dim = 4  # number of hidden layers
+    # rnn_layer_dim = 2  # number of hidden layers
     # output_dim = 2  # output dimension
     # seq_len = 50
 
@@ -80,7 +81,8 @@ def train():
         valid_ext_list_hit = pickle.load(f)
 
     num_epochs = n_iters / (len(input_train) / batch_size)
-    num_epochs = int(num_epochs)
+    # num_epochs = int(num_epochs)
+    num_epochs = 10
 
     print("running from_numpy")
     # Pytorch train and test sets
@@ -105,7 +107,7 @@ def train():
 
     print("initializing lstm model")
     model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
-    # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+    rnn_model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
 
     if torch.cuda.is_available():
         model.to(device=f"cuda:{visible_gpus}")
@@ -138,6 +140,12 @@ def train():
 
             # Forward propagation
             outputs = model(train)
+            rnn_outputs = rnn_model(train)
+
+            # print("lstm", outputs.shape)
+            # print("rnn", rnn_outputs.shape)
+
+            outputs = torch.mul(outputs, 0.6) + torch.mul(rnn_outputs, 0.4)
 
             # Calculate softmax and ross entropy loss
 
@@ -163,6 +171,15 @@ def train():
 
                     # Forward propagation
                     outputs = model(images)
+                    rnn_outputs = rnn_model(train)
+
+                    # print("valid lstm", outputs.shape)
+                    # print("valid rnn", rnn_outputs.shape)
+
+                    if outputs.size(0) == rnn_outputs.size(0):
+                        outputs = torch.mul(outputs, 0.6) + torch.mul(rnn_outputs, 0.4)
+                    # else:
+                    #     print("diff", outputs.shape, rnn_outputs.shape)
 
                     valid_output_list += outputs
 
@@ -187,6 +204,7 @@ def train():
                 print('Epoch: {} Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(epoch, count, loss.data, accuracy, hit_rate))
                 if count % 500 == 0:
                     torch.save(model.state_dict(), f'./model/generator/model_{str(count)}.pth')
+                    torch.save(rnn_model.state_dict(), f'./model/generator/rnn_model_{str(count)}.pth')
     writer.close()
 def get_sub_list(output_list, metadata):
     sub = []
@@ -195,7 +213,7 @@ def get_sub_list(output_list, metadata):
     for _, len_article in metadata:
         result = []
         for sent_num in range(len_article):
-            ext_pos = torch.nn.functional.sigmoid(output_list[sent_count])[1].item()
+            ext_pos = torch.sigmoid(output_list[sent_count])[1].item()
             if len(result) >= 3:
                 result = sorted(result, key=(lambda x: x[1]), reverse=True)
                 if ext_pos > result[-1][1]:
