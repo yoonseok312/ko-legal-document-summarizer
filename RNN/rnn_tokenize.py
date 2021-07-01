@@ -35,12 +35,13 @@ def tokenize(input_dim: int):
     tokenized_all_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in all_sent]
     tokenized_train_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in train_sent]
     tokenized_valid_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in valid_sent]
-    # tokenized_test_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in test_data['sentence']]
-    # tokenized_all_data = tokenized_train_data + tokenized_test_data
 
     embedding_model = Word2Vec(sentences=tokenized_all_data, vector_size=input_dim, window=8, min_count=1, workers=16, sg=0)
 
-    return tokenized_train_data, tokenized_valid_data, embedding_model, train_data, valid_data, l_tokenizer
+    target_train = list(train_data['if_ext'])
+    target_valid = list(valid_data['if_ext'])
+
+    return tokenized_train_data, tokenized_valid_data, embedding_model, target_train, target_valid, l_tokenizer
 
 def create_dataset(
         tokenized_train_data: List,
@@ -48,8 +49,6 @@ def create_dataset(
         embedding_model: Word2Vec,
         input_dim: int,
         seq_len: int,
-        train_data,
-        valid_data
 ):
 
     print("Start")
@@ -84,13 +83,6 @@ def create_dataset(
 
     print("loop end")
 
-    target_train = list(train_data['if_ext'])
-    target_valid = list(valid_data['if_ext'])
-
-    # input_train, input_test, target_train, target_test = train_test_split(np.array(input_list),
-    #                                                                           np.array(target_list),
-    #                                                                           test_size=0.2,
-    #                                                                           random_state=42)
 
     print("dataset end")
-    return input_train, input_valid, target_train, target_valid
+    return input_train, input_valid

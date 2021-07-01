@@ -10,6 +10,9 @@ import numpy as np
 import random
 import pickle
 from tensorboardX import SummaryWriter
+from multiprocessing import Pool
+
+
 
 def train():
     #tensorboard settings
@@ -26,7 +29,7 @@ def train():
     hidden_dim = 256  # hidden layer dimension
     layer_dim = 4  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 50
+    seq_len = 40
 
     # RNN configs
     # batch_size = 32
@@ -65,16 +68,13 @@ def train():
     torch.backends.cudnn.benchmark = False
     np.random.seed(seed)
 
-    tokenized_data, tokenized_valid_data, embedding_model, train_data, valid_data, _ = tokenize(input_dim)
-    input_train, input_test, target_train, target_test = create_dataset(
+    tokenized_data, tokenized_valid_data, embedding_model, target_train, target_test, _ = tokenize(input_dim)
+    input_train, input_test = create_dataset(
         tokenized_data,
         tokenized_valid_data,
         embedding_model,
         input_dim,
-        seq_len,
-        train_data,
-        valid_data
-    )
+        seq_len)
 
     print("opening  valid_ext_list_hit")
     with open("./data/valid_ext_list_hit", "rb") as f:
@@ -85,6 +85,7 @@ def train():
 
     print("running from_numpy")
     # Pytorch train and test sets
+
     input_tensor_train = torch.from_numpy(np.array(input_train, dtype=np.float64)).float()
     input_tensor_test = torch.from_numpy(np.array(input_test, dtype=np.float64)).float()
 
@@ -114,8 +115,8 @@ def train():
     error = nn.CrossEntropyLoss()
 
     # Adam Optimizer
-    learning_rate = 0.05
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    learning_rate = 0.01
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
 
     loss_list = []
     iteration_list = []
@@ -185,8 +186,8 @@ def train():
                 iteration_list.append(count)
                 accuracy_list.append(accuracy)
                 print('Epoch: {} Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(epoch, count, loss.data, accuracy, hit_rate))
-                if count % 1000 == 0:
-                    torch.save(model.state_dict(), f'./model/seq_len_{seq_len}/model_{str(count)}.pth')
+                if count % 500 == 0:
+                    torch.save(model.state_dict(), f'./model/seq_len_{seq_len}_2/model_{str(count)}.pth')
     writer.close()
 def get_sub_list(output_list, metadata):
     sub = []
@@ -195,7 +196,7 @@ def get_sub_list(output_list, metadata):
     for _, len_article in metadata:
         result = []
         for sent_num in range(len_article):
-            ext_pos = torch.nn.functional.softmax(output_list[sent_count], dim=0)[1].item()
+            ext_pos = torch.nn.functional.sigmoid(output_list[sent_count])[1].item()
             if len(result) >= 3:
                 result = sorted(result, key=(lambda x: x[1]), reverse=True)
                 if ext_pos > result[-1][1]:

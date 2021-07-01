@@ -22,27 +22,30 @@ def make_submission():
     # visible_gpus = 0
     # seq_len = 20
 
-    #LSTM
+    # LSTM configs
     batch_size = 32
     n_iters = 50000
     visible_gpus = 0
     seed = 7777
+
     # Create RNN
     input_dim = 128  # input dimension
     hidden_dim = 256  # hidden layer dimension
     layer_dim = 4  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 40
+    seq_len = 50
+
+
 
     device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
     device_id = 0 if device == f"cuda" else -1
 
     # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
     model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device).to(device=device)
-    model.load_state_dict((torch.load('./model/seq_len_40/model_43000.pth')))
+    model.load_state_dict((torch.load('./model/seq_len_40_2/model_26000.pth')))
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")
-    tokenized_data, tokenized_valid_data, embedding_model,  train_data, valid_data, l_tokenizer = tokenize(input_dim)
+    tokenized_data, tokenized_valid_data, embedding_model, target_train, target_test, l_tokenizer = tokenize(input_dim)
 
     word_extractor = WordExtractor()
     word_extractor.train(train_data['sentence'])
@@ -99,7 +102,7 @@ def make_submission():
 
         # Forward propagation
         output = model(for_test)
-        output = torch.nn.functional.softmax(output, dim=1)
+        output = torch.nn.functional.sigmoid(output)
         output_list.append(output[0][1].item())
 
     test_data["if_ext"] = output_list
@@ -133,7 +136,7 @@ def make_submission():
         for i in range(3):
             submission_template[n]['summary_index' + str(i + 1)] = sub[n][i][0]
 
-    with open("./output/lstm_seqlen40.json", "w") as json_file:
+    with open("./output/lstm_seqlen40_2_sigmo.json", "w") as json_file:
         json.dump(submission_template, json_file)
 
 if __name__ == '__main__':
