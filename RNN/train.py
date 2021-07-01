@@ -13,7 +13,6 @@ from tensorboardX import SummaryWriter
 from multiprocessing import Pool
 
 
-
 def train():
     #tensorboard settings
     writer =  SummaryWriter()
@@ -187,7 +186,7 @@ def train():
                 accuracy_list.append(accuracy)
                 print('Epoch: {} Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(epoch, count, loss.data, accuracy, hit_rate))
                 if count % 500 == 0:
-                    torch.save(model.state_dict(), f'./model/seq_len_{seq_len}_2/model_{str(count)}.pth')
+                    torch.save(model.state_dict(), f'./model/generator/model_{str(count)}.pth')
     writer.close()
 def get_sub_list(output_list, metadata):
     sub = []

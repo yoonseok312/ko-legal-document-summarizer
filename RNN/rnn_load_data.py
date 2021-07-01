@@ -11,6 +11,7 @@ seed = 7777
 DATA_DIR = f'{PROJECT_DIR}/data'
 RAW_DATA_DIR = DATA_DIR + '/raw'
 
+
 def split_data():
     with open(f"./data/train.json", "r", encoding='UTF-8-sig') as st_json:
         train = json.load(st_json)

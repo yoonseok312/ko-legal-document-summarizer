@@ -13,6 +13,7 @@ from rnn_tokenize import tokenize
 from model import RNNModel
 from LSTM import LSTMModel
 
+
 def make_submission():
     # Create RNN
     # input_dim = 512  # input dimension
