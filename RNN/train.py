@@ -17,11 +17,11 @@ def train():
     n_iters = 20000
     visible_gpus = 0
     seed = 777
-    input_dim = 128  # input dimension
-    hidden_dim = 256  # hidden layer dimension
+    input_dim = 10  # input dimension
+    hidden_dim = 10  # hidden layer dimension
     layer_dim = 1  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 20
+    seq_len = 5
 
     # RNN configs
     # batch_size = 16
@@ -90,7 +90,7 @@ def train():
     target_tensor_test = torch.from_numpy(np.array(target_test, dtype=np.float64)).float().type(torch.LongTensor)
 
 
-    # print(input_tensor_train.shape, target_tensor_train.shape)
+    print(input_tensor_train.shape, target_tensor_train.shape)
 
     # print(input_tensor_train.shape, target_tensor_train.shape)
 

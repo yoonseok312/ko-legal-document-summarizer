@@ -17,9 +17,9 @@ import json
 
 def tokenize(input_dim: int):
 
-    train_data = pd.read_pickle(f"./data/train_df.pickle")
-    valid_data = pd.read_pickle(f"./data/valid_df.pickle")
-    test_data = pd.read_pickle(f"./data/test_df.pickle")
+    train_data = pd.read_pickle(f"./data/train_article_df.pickle")
+    valid_data = pd.read_pickle(f"./data/valid_article_df.pickle")
+    test_data = pd.read_pickle(f"./data/test_article_df.pickle")
 
     train_sent = train_data['sentence']
     valid_sent = valid_data['sentence']
@@ -114,8 +114,7 @@ def create_dataset(
     zero_list = [0] * input_dim
     max_sent_in_article = 50
     for article in tqdm(tokenized_train_data):
-        article_list = []
-        for sent in article:
+        for idx, sent in enumerate(article, start=1):
             temp_list = []
             sent = sent[-seq_len:]
             for word_count, word in enumerate(sent):
@@ -126,18 +125,20 @@ def create_dataset(
                 else:
                     temp_list += zero_list
             temp_list = zero_list * (seq_len - len(sent)) + temp_list
-            article_list += [temp_list]
-        if len(article_list) > max_sent_in_article:
-            print("error")
-        while len(article_list) < max_sent_in_article:
-            article_list += [[0] * input_dim * seq_len]
-        input_train += [article_list]
-
+            input_train += [temp_list]
+            while len(input_train) < 50 * idx:
+                input_train += [[0] * input_dim * seq_len]
+            if len(input_train) < 50 * idx or len(input_train) > 50 * idx:
+                print("train error", len(input_train))
+        # input_train += [article_list]
 
     input_valid = []
-    for article in tqdm(tokenized_valid_data):
-        article_list = []
-        for sent in article:
+    zero_list = [0] * input_dim
+    max_sent_in_article = 50
+    count = 0
+    for article in tqdm(tokenized_train_data):
+        print("num train article", len(tokenized_train_data))
+        for idx, sent in enumerate(article, start=1):
             temp_list = []
             sent = sent[-seq_len:]
             for word_count, word in enumerate(sent):
@@ -148,12 +149,12 @@ def create_dataset(
                 else:
                     temp_list += zero_list
             temp_list = zero_list * (seq_len - len(sent)) + temp_list
-            article_list += [temp_list]
-        if len(article_list) > max_sent_in_article:
-            print("error")
-        while len(article_list) < max_sent_in_article:
-            article_list += [[0] * input_dim * seq_len]
-        input_valid += [article_list]
+            input_valid += [temp_list]
+            while len(input_valid) < 50 * idx:
+                print("add")
+                input_valid += [[0] * input_dim * seq_len]
+            if len(input_valid) < 50 * idx or len(input_valid) > 50 * idx:
+                print("valid error", len(input_valid))
 
     print("loop end")
 
@@ -162,8 +163,8 @@ def create_dataset(
     for item in list(train_data['if_ext']):
         temp = []
         # while len(item) < 50:
-        target_train += [item + [-1] * (50 - len(item))]
-        pad_mask_train += [[1] * len(item) + [0] * (50 - len(item))]
+        target_train += item + [-1] * (50 - len(item))
+        pad_mask_train += [1] * len(item) + [0] * (50 - len(item))
         # print("target", len(target_train))
         # print("pad", len(pad_mask_train))
 
@@ -171,8 +172,8 @@ def create_dataset(
     pad_mask_valid = []
     for item in list(valid_data['if_ext']):
         # while len(item) < 50:
-        target_valid += [item + [-1] * (50 - len(item))]
-        pad_mask_valid += [[1] * len(item) + [0] * (50 - len(item))]
+        target_valid += item + [-1] * (50 - len(item))
+        pad_mask_valid += [1] * len(item) + [0] * (50 - len(item))
 
     # target_train = list(train_data['if_ext'])
     # target_valid = list(valid_data['if_ext'])
