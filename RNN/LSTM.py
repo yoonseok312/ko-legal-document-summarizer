@@ -38,9 +38,9 @@ class LSTMModel(nn.Module):
         # Index hidden state of last time step
         # out.size() --> 100, 28, 100
         # out[:, -1, :] --> 100, 100 --> just want last time step hidden states!
-        print("linear in", out.shape)
+        # print("linear in", out.shape)
         out = self.fc(out[:, -1, :])
 
-        print("linear out", out.shape)
+        # print("linear out", out.shape)
         # out.size() --> 100, 10
         return out

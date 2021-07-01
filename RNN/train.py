@@ -93,8 +93,8 @@ def train():
     target_tensor_train = torch.from_numpy(np.array(target_train, dtype=np.float64)).float().type(torch.LongTensor)
     target_tensor_test = torch.from_numpy(np.array(target_test, dtype=np.float64)).float().type(torch.LongTensor)
 
-    # pad_mask_train = torch.from_numpy(np.array(pad_mask_train, dtype=np.float64)).float().type(torch.LongTensor)
-    # pad_mask_valid = torch.from_numpy(np.array(pad_mask_valid, dtype=np.float64)).float().type(torch.LongTensor)
+    pad_mask_train = torch.from_numpy(np.array(pad_mask_train, dtype=np.float64)).float().type(torch.LongTensor)
+    pad_mask_valid = torch.from_numpy(np.array(pad_mask_valid, dtype=np.float64)).float().type(torch.LongTensor)
 
 
     # print(input_tensor_train.shape, target_tensor_train.shape, pad_mask_train.shape)
@@ -205,7 +205,7 @@ def train():
             # print("train shape", outputs.shape)
             # print("labels shape", labels.shape)
 
-            loss = error(outputs, labels) # .to(device=device)
+            loss = error(outputs, labels.to(device=device)) # .to(device=device)
 
             # Calculating gradients
             loss.backward()
