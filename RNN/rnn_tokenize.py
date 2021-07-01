@@ -77,12 +77,6 @@ def tokenize(input_dim: int):
 
     tokenized_for_vector = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in all_original_data]
 
-    # for article in all_data['sentence']:
-    #     temp = []
-    #     for sentence in article:
-    #         tokenized_for_vector += l_tokenizer.tokenize(sentence, flatten=True)
-            # temp += [l_tokenizer.tokenize(sentence, flatten=True)]
-        # tokenized_all_data += [temp]
     print("all data done")
     for article in train_data['sentence']:
         temp = []
@@ -94,16 +88,6 @@ def tokenize(input_dim: int):
         for sentence in article:
             temp += [l_tokenizer.tokenize(sentence, flatten=True)]
         tokenized_valid_data += [temp]
-    # for index in range(len(train_sent)):
-    #     article = train_data['sentence'][index].values[0]
-    #     tokenized_train_data += [l_tokenizer.tokenize(sentence, flatten=True) for sentence in article]
-    # for index in range(len(valid_sent)):
-    #     article = valid_data['sentence'][index].values[0]
-    #     tokenized_valid_data += [l_tokenizer.tokenize(sentence, flatten=True) for sentence in article]
-    # tokenized_train_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in train_sent]
-    # tokenized_valid_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in valid_sents]
-    # tokenized_test_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in test_data['sentence']]
-    # tokenized_all_data = tokenized_train_data + tokenized_test_data
 
     embedding_model = Word2Vec(sentences=tokenized_for_vector, vector_size=input_dim, window=8, min_count=0, workers=16, sg=0)
 
@@ -163,8 +147,6 @@ def create_dataset(
             input_valid += [temp_list]
         while len(input_valid) < 50 * idx:
             input_valid += [[0] * input_dim * seq_len]
-            # if len(input_valid) < 50 * idx or len(input_valid) > 50 * idx:
-                # print("valid error", len(input_valid))
 
     print("loop end")
 
@@ -176,8 +158,6 @@ def create_dataset(
         # while len(item) < 50:
         target_train += item + [0] * (50 - len(item))
         pad_mask_train += [1] * len(item) + [0] * (50 - len(item))
-        # print("target", len(target_train))
-        # print("pad", len(pad_mask_train))
 
     target_valid = []
     pad_mask_valid = []
@@ -186,15 +166,5 @@ def create_dataset(
         target_valid += item + [0] * (50 - len(item))
         pad_mask_valid += [1] * len(item) + [0] * (50 - len(item))
 
-    # target_train = list(train_data['if_ext'])
-    # target_valid = list(valid_data['if_ext'])
-
-    # input_train, input_test, target_train, target_test = train_test_split(np.array(input_list),
-    #                                                                           np.array(target_list),
-    #                                                                           test_size=0.2,
-    #                                                                           random_state=42)
-
     print("dataset end")
-    # print("tgt", target_train.shape)
-    # print("pad", pad_mask_train.shape)
     return input_train, input_valid, target_train, target_valid, pad_mask_train, pad_mask_valid

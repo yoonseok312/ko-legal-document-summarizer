@@ -151,19 +151,10 @@ def train():
     for epoch in range(num_epochs):
         print(epoch)
         for i, (images, labels, pad_mask_train) in enumerate(train_loader):
-            # print("input image", images.shape)
-            # print("input labels", labels.shape)
-            # print("input pad", pad_train.shape)
+
             train = Variable(images.view(-1, seq_len, input_dim)).requires_grad_()
             # train = Variable(images).requires_grad_()
             labels = Variable(labels)
-            # print("var image", train.shape)
-            # print("var labels", labels.shape)
-            # print("input pad", pad_train.shape)
-
-            # if torch.cuda.is_available():
-            #     train.to(device=f"cuda:{visible_gpus}")
-            #     labels.to(device=f"cuda:{visible_gpus}")
 
             # Clear gradients
             optimizer.zero_grad()
@@ -172,46 +163,8 @@ def train():
             # print(len(nonzeros))
             train = train[nonzeros[0]]
             labels = labels[nonzeros[0]]
-            # print("train", train)
-            # print("label", labels)
-
-            # Forward propagation
-
-            # print("input train", train.shape)
 
             outputs = model(train)
-
-            # print(outputs.shape)
-            # print(labels.shape)
-
-            # labels = torch.flatten(labels)
-            # if batch_size * (i+1) <= len(pad_mask_train):
-            #     pad_mask_train = pad_mask_train[batch_size * i:batch_size * (i+1)]
-            # else:
-            #     print("else")
-            #     pad_mask_train = pad_mask_train[batch_size * i:len(pad_mask_train)]
-            # print("pad", pad_train.shape)
-            # print("label", labels.shape)
-            # print("output", outputs.shape)
-            # nonzeros = torch.nonzero(torch.LongTensor(pad_train), as_tuple=True)
-            # labels = labels[nonzeros[0], nonzeros[1]]
-            # # print("label gather", labels.shape)
-            # # labels = torch.flatten(labels)
-            # # print("label flatten", labels.shape)
-            # outputs = outputs[nonzeros[0], nonzeros[1]]
-
-            # outputs = linear_layer(outputs)
-            # outputs = outputs[nonzeros[0]]
-
-
-            # print(labels.shape)
-
-            # Calculate softmax and ross entropy loss
-
-            # print("output", outputs)
-            # print("label", labels)
-            # print("train shape", outputs.shape)
-            # print("labels shape", labels.shape)
 
             loss = error(outputs, labels.to(device=device)) # .to(device=device)
 
@@ -230,65 +183,25 @@ def train():
                 # Iterate through test dataset
                 valid_output_list = []
                 for i, (images, labels, pad_mask_valid) in enumerate(test_loader):
-                    # print("labels", labels)
                     images = Variable(images.view(-1, seq_len, input_dim))
 
-
-                    # images = Variable(images).requires_grad_()
-
                     nonzeros = torch.nonzero(pad_mask_valid, as_tuple=True)
-                    # print(len(nonzeros))
                     images = images[nonzeros[0]]
                     labels = labels[nonzeros[0]]
-                    # print(images)
-                    # print(images.shape)
-                    # print("--------------------------")
-
-                    # Forward propagation
                     outputs = model(images)
-
-                    # print("output", outputs.shape)
-
-                    # outputs = outputs[nonzeros[0], nonzeros[1]]
-                    # nonzeros = torch.nonzero(torch.LongTensor(pad_valid), as_tuple=True)
-                    # # outputs = outputs[nonzeros[0]]
-                    # outputs = outputs[nonzeros[0], nonzeros[1]]
-                    # outputs = linear_layer(outputs)
 
                     valid_output_list += outputs
 
-                    # Get predictions from the maximum value
                     predicted = torch.max(outputs.data, 1)[1]
 
-                    # print("test")
-                    #
-                    # print("label", labels.shape)
-                    # labels = torch.flatten(labels)
-                    # labels = labels[nonzeros[0], nonzeros[1]]
-                    # print("labels size", labels.shape)
-                    # labels = torch.flatten(labels)
-                    # print("labels flatten size", labels.shape)
-
-                    # print("flatten", labels.shape)
-                    # print("size 0", labels.size(0))
-                    # Total number of labels
-                    # print("label", labels.shape)
                     total += labels.size(0)
 
-                    # print("predicted size", predicted.shape)
-
                     correct += (predicted == labels.to(device=device)).sum()
-                    # print(predicted)
-                    # print("acc", correct, total)
-
-                # print("end")
 
                 if total == 0:
                     print("Can't calculate accuracy & hit rate")
                 else:
                     accuracy = 100 * correct / float(total)
-                    # print("output", valid_output_list)
-                    # print("hist", valid_ext_list_hit)
                     hit_rate = calc_hit_rate(valid_output_list, valid_ext_list_hit)
 
                 # store loss and iteration
