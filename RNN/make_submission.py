@@ -42,10 +42,21 @@ def make_submission():
     model.load_state_dict((torch.load('./model/seq_len/model_16500.pth')))
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")
-    tokenized_data, tokenized_valid_data, embedding_model,  train_data, valid_data, l_tokenizer = tokenize(input_dim)
+    valid_data = pd.read_pickle(f"./data/valid_df.pickle")
+    test_data = pd.read_pickle(f"./data/test_df.pickle")
+
+    train_sent = train_data['sentence']
+    valid_sent = valid_data['sentence']
+    test_sent = test_data['sentence']
+
+    all_sent = pd.concat([train_sent, valid_sent, test_sent])
 
     word_extractor = WordExtractor()
-    word_extractor.train(train_data['sentence'])
+    word_extractor.train(all_sent)
+
+    tokenized_data, tokenized_valid_data, embedding_model,  _, _, l_tokenizer = tokenize(input_dim)
+
+
     # word_score_table = word_extractor.extract()
 
     with open("./data/test.json", "r", encoding='UTF-8-sig') as st_json:
