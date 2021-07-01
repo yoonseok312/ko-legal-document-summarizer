@@ -13,7 +13,7 @@ import pickle
 
 def train():
     # LSTM configs
-    batch_size = 8
+    batch_size = 50
     n_iters = 20000
     visible_gpus = 0
     seed = 777
@@ -146,8 +146,8 @@ def train():
             # print("input image", images.shape)
             # print("input labels", labels.shape)
             # print("input pad", pad_train.shape)
-            # train = Variable(images.view(-1, seq_len, input_dim)).requires_grad_()
-            train = Variable(images).requires_grad_()
+            train = Variable(images.view(-1, seq_len, input_dim)).requires_grad_()
+            # train = Variable(images).requires_grad_()
             labels = Variable(labels)
             # print("var image", train.shape)
             # print("var labels", labels.shape)
@@ -175,14 +175,14 @@ def train():
             # print("pad", pad_train.shape)
             # print("label", labels.shape)
             # print("output", outputs.shape)
-            nonzeros = torch.nonzero(torch.LongTensor(pad_train), as_tuple=True)
-            labels = labels[nonzeros[0], nonzeros[1]]
-            # print("label gather", labels.shape)
-            # labels = torch.flatten(labels)
-            # print("label flatten", labels.shape)
-            outputs = outputs[nonzeros[0], nonzeros[1]]
+            # nonzeros = torch.nonzero(torch.LongTensor(pad_train), as_tuple=True)
+            # labels = labels[nonzeros[0], nonzeros[1]]
+            # # print("label gather", labels.shape)
+            # # labels = torch.flatten(labels)
+            # # print("label flatten", labels.shape)
+            # outputs = outputs[nonzeros[0], nonzeros[1]]
 
-            outputs = linear_layer(outputs)
+            # outputs = linear_layer(outputs)
             # outputs = outputs[nonzeros[0]]
 
 
@@ -211,8 +211,8 @@ def train():
                 valid_output_list = []
                 for i, (images, labels, pad_valid) in enumerate(test_loader):
                     # print("labels", labels)
-                    # images = Variable(images.view(-1, seq_len, input_dim))
-                    images = Variable(images).requires_grad_()
+                    images = Variable(images.view(-1, seq_len, input_dim))
+                    # images = Variable(images).requires_grad_()
 
                     # Forward propagation
                     outputs = model(images)
@@ -220,10 +220,10 @@ def train():
                     # print("output", outputs.shape)
 
                     # outputs = outputs[nonzeros[0], nonzeros[1]]
-                    nonzeros = torch.nonzero(torch.LongTensor(pad_valid), as_tuple=True)
-                    # outputs = outputs[nonzeros[0]]
-                    outputs = outputs[nonzeros[0], nonzeros[1]]
-                    outputs = linear_layer(outputs)
+                    # nonzeros = torch.nonzero(torch.LongTensor(pad_valid), as_tuple=True)
+                    # # outputs = outputs[nonzeros[0]]
+                    # outputs = outputs[nonzeros[0], nonzeros[1]]
+                    # outputs = linear_layer(outputs)
 
                     valid_output_list += outputs
 
@@ -234,7 +234,7 @@ def train():
                     #
                     # print("label", labels.shape)
                     # labels = torch.flatten(labels)
-                    labels = labels[nonzeros[0], nonzeros[1]]
+                    # labels = labels[nonzeros[0], nonzeros[1]]
                     # print("labels size", labels.shape)
                     # labels = torch.flatten(labels)
                     # print("labels flatten size", labels.shape)

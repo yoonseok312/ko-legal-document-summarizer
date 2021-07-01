@@ -20,7 +20,7 @@ class RNNModel(nn.Module):
         self.device = device
 
         # RNN
-        self.rnn = nn.RNN(input_dim * self.seq_len, hidden_dim, layer_dim, batch_first=True, nonlinearity='relu').to(device=device)
+        self.rnn = nn.RNN(input_dim, hidden_dim, layer_dim, batch_first=True, nonlinearity='relu').to(device=device)
 
         # Readout layer
         self.fc = nn.Linear(hidden_dim, output_dim)
@@ -40,7 +40,7 @@ class RNNModel(nn.Module):
 
         # print("out", out.shape)
         # print("rnn output", out.shape)
-        # out = self.fc(out[:, -1, :])
+        out = self.fc(out[:, -1, :])
         # print("linear out", out.shape)
         # out = self.fc(out)
         return out
