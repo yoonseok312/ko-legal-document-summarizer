@@ -17,8 +17,8 @@ def train():
     n_iters = 20000000
     visible_gpus = 0
     seed = 777
-    input_dim = 32  # input dimension
-    hidden_dim = 64  # hidden layer dimension
+    input_dim = 128  # input dimension
+    hidden_dim = 256  # hidden layer dimension
     layer_dim = 1  # number of hidden layers
     output_dim = 2  # output dimension
     seq_len = 20
@@ -105,8 +105,8 @@ def train():
     # pad_mask_valid = torch.LongTensor(pad_mask_valid)
 
     # Pytorch train and test sets
-    train = TensorDataset(input_tensor_train, target_tensor_train)
-    test = TensorDataset(input_tensor_test, target_tensor_test)
+    train = TensorDataset(input_tensor_train, target_tensor_train, pad_mask_train)
+    test = TensorDataset(input_tensor_test, target_tensor_test, pad_mask_valid)
 
     print("TensorDataset created")
 
@@ -149,7 +149,7 @@ def train():
     print("training start")
     for epoch in range(num_epochs):
         print(epoch)
-        for i, (images, labels) in enumerate(train_loader):
+        for i, (images, labels, pad_mask_train) in enumerate(train_loader):
             # print("input image", images.shape)
             # print("input labels", labels.shape)
             # print("input pad", pad_train.shape)
@@ -166,6 +166,13 @@ def train():
 
             # Clear gradients
             optimizer.zero_grad()
+
+            nonzeros = torch.nonzero(pad_mask_train, as_tuple=True)
+            # print(len(nonzeros))
+            train = train[nonzeros[0]]
+            labels = labels[nonzeros[0]]
+            # print("train", train.shape)
+            # print("label", labels.shape)
 
             # Forward propagation
 
@@ -221,10 +228,14 @@ def train():
                 total = 0
                 # Iterate through test dataset
                 valid_output_list = []
-                for i, (images, labels) in enumerate(test_loader):
+                for i, (images, labels, pad_mask_valid) in enumerate(test_loader):
                     # print("labels", labels)
                     images = Variable(images.view(-1, seq_len, input_dim))
                     # images = Variable(images).requires_grad_()
+
+                    nonzeros = torch.nonzero(pad_mask_valid, as_tuple=True)
+                    images = images[nonzeros[0]]
+                    labels = labels[nonzeros[0]]
 
                     # Forward propagation
                     outputs = model(images)
@@ -260,6 +271,8 @@ def train():
                     # print("predicted size", predicted.shape)
 
                     correct += (predicted == labels.to(device=device)).sum()
+                    print(predicted)
+                    print("acc", correct, total)
 
                 # print("end")
 
