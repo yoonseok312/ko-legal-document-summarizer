@@ -17,11 +17,12 @@ def train():
     n_iters = 20000000
     visible_gpus = 0
     seed = 777
-    input_dim = 10  # input dimension
-    hidden_dim = 20  # hidden layer dimension
+    input_dim = 128  # input dimension
+    hidden_dim = 256  # hidden layer dimension
     layer_dim = 1  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 2
+    seq_len = 20
+
 
     # RNN configs
     # batch_size = 16
@@ -171,8 +172,8 @@ def train():
             # print(len(nonzeros))
             train = train[nonzeros[0]]
             labels = labels[nonzeros[0]]
-            # print("train", train.shape)
-            # print("label", labels.shape)
+            # print("train", train)
+            # print("label", labels)
 
             # Forward propagation
 
@@ -222,7 +223,7 @@ def train():
 
             count += 1
 
-            if count % 50 == 0:
+            if count % 500 == 0:
                 # Calculate Accuracy
                 correct = 0
                 total = 0
@@ -239,9 +240,9 @@ def train():
                     # print(len(nonzeros))
                     images = images[nonzeros[0]]
                     labels = labels[nonzeros[0]]
-                    print(images)
-                    print(images.shape)
-                    print("--------------------------")
+                    # print(images)
+                    # print(images.shape)
+                    # print("--------------------------")
 
                     # Forward propagation
                     outputs = model(images)
@@ -278,7 +279,7 @@ def train():
 
                     correct += (predicted == labels.to(device=device)).sum()
                     # print(predicted)
-                    print("acc", correct, total)
+                    # print("acc", correct, total)
 
                 # print("end")
 

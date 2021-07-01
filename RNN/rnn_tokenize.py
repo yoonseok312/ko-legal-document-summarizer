@@ -21,11 +21,20 @@ def tokenize(input_dim: int):
     valid_data = pd.read_pickle(f"./data/valid_article_df.pickle")
     test_data = pd.read_pickle(f"./data/test_article_df.pickle")
 
-    train_sent = train_data['sentence']
-    valid_sent = valid_data['sentence']
-    test_sent = test_data['sentence']
+    train_original_data = pd.read_pickle(f"./data/train_df.pickle")
+    valid_original_data = pd.read_pickle(f"./data/valid_df.pickle")
+    test_original_data = pd.read_pickle(f"./data/test_df.pickle")
+
+    # train_sent = train_data['sentence']
+    # valid_sent = valid_data['sentence']
+    # test_sent = test_data['sentence']
+
+    train_original_sent = train_original_data['sentence']
+    valid_original_sent = valid_original_data['sentence']
+    test_original_sent = test_original_data['sentence']
 
     all_data = pd.concat([train_data, valid_data, test_data])
+    all_original_data = pd.concat([train_original_sent, valid_original_sent, test_original_sent])
 
     all_sents = all_data['sentence']
 
@@ -51,7 +60,6 @@ def tokenize(input_dim: int):
 
     # print(all_sent)
 
-
     word_extractor = WordExtractor()
     word_extractor.train(all_sent)
     word_score_table = word_extractor.extract()
@@ -67,10 +75,12 @@ def tokenize(input_dim: int):
             # print(sentence)
             # break
 
-    for article in all_data['sentence']:
-        temp = []
-        for sentence in article:
-            tokenized_for_vector = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in article]
+    tokenized_for_vector = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in all_original_data]
+
+    # for article in all_data['sentence']:
+    #     temp = []
+    #     for sentence in article:
+    #         tokenized_for_vector += l_tokenizer.tokenize(sentence, flatten=True)
             # temp += [l_tokenizer.tokenize(sentence, flatten=True)]
         # tokenized_all_data += [temp]
     print("all data done")
@@ -95,7 +105,7 @@ def tokenize(input_dim: int):
     # tokenized_test_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in test_data['sentence']]
     # tokenized_all_data = tokenized_train_data + tokenized_test_data
 
-    embedding_model = Word2Vec(sentences=tokenized_for_vector, vector_size=input_dim, window=8, min_count=1, workers=16, sg=0)
+    embedding_model = Word2Vec(sentences=tokenized_for_vector, vector_size=input_dim, window=8, min_count=0, workers=16, sg=0)
 
     return tokenized_train_data, tokenized_valid_data, embedding_model, train_data, valid_data, l_tokenizer
 
