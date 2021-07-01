@@ -98,6 +98,7 @@ def tokenize(input_dim: int):
 
     return tokenized_train_data, tokenized_valid_data, embedding_model, train_data, valid_data, l_tokenizer
 
+
 def create_dataset(
         tokenized_train_data: List,
         tokenized_valid_data: List,
@@ -112,7 +113,7 @@ def create_dataset(
     input_train = []
     zero_list = [0] * input_dim
     max_sent_in_article = 50
-    for idx, article in tqdm(enumerate(tokenized_train_data, start=1)):
+    for idx, article in enumerate(tqdm(tokenized_train_data), start=1):
         # print("num train article", len(tokenized_train_data))
         for sent in article:
             temp_list = []
@@ -136,7 +137,7 @@ def create_dataset(
     zero_list = [0] * input_dim
     max_sent_in_article = 50
     count = 0
-    for idx, article in tqdm(enumerate(tokenized_valid_data, start=1)):
+    for idx, article in enumerate(tqdm(tokenized_valid_data), start=1):
         for sent in article:
             temp_list = []
             sent = sent[-seq_len:]
@@ -162,7 +163,7 @@ def create_dataset(
     for item in list(train_data['if_ext']):
         temp = []
         # while len(item) < 50:
-        target_train += item + [-1] * (50 - len(item))
+        target_train += item + [0] * (50 - len(item))
         pad_mask_train += [1] * len(item) + [0] * (50 - len(item))
         # print("target", len(target_train))
         # print("pad", len(pad_mask_train))
@@ -171,7 +172,7 @@ def create_dataset(
     pad_mask_valid = []
     for item in list(valid_data['if_ext']):
         # while len(item) < 50:
-        target_valid += item + [-1] * (50 - len(item))
+        target_valid += item + [0] * (50 - len(item))
         pad_mask_valid += [1] * len(item) + [0] * (50 - len(item))
 
     # target_train = list(train_data['if_ext'])

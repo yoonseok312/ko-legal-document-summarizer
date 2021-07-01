@@ -14,14 +14,14 @@ import pickle
 def train():
     # LSTM configs
     batch_size = 50
-    n_iters = 20000
-    visible_gpus = -1
+    n_iters = 20000000
+    visible_gpus = 0
     seed = 777
-    input_dim = 10  # input dimension
-    hidden_dim = 10  # hidden layer dimension
+    input_dim = 32  # input dimension
+    hidden_dim = 64  # hidden layer dimension
     layer_dim = 1  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 5
+    seq_len = 20
 
     # RNN configs
     # batch_size = 16
@@ -47,9 +47,9 @@ def train():
     # seq_len = 10
 
 
-    device = "cpu"  # if visible_gpus == '-1' else f"cuda:{visible_gpus}"
-    # device_id = 0 if device == f"cuda" else -1
-    device_id = -1
+    device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
+    device_id = 0 if device == f"cuda" else -1
+    # device_id = -1
 
     if device_id >= 0:
         torch.cuda.set_device(device_id)
@@ -76,8 +76,9 @@ def train():
     with open("./data/valid_ext_list_hit", "rb") as f:
         valid_ext_list_hit = pickle.load(f)
 
-    num_epochs = n_iters / (len(input_train) / batch_size)
-    num_epochs = int(num_epochs)
+    # num_epochs = n_iters / (len(input_train) / batch_size)
+    # num_epochs = int(num_epochs)
+    num_epochs = 50
 
     # Pytorch train and test sets
     # input_tensor_train = torch.Tensor(input_train).float()
@@ -92,20 +93,20 @@ def train():
     target_tensor_train = torch.from_numpy(np.array(target_train, dtype=np.float64)).float().type(torch.LongTensor)
     target_tensor_test = torch.from_numpy(np.array(target_test, dtype=np.float64)).float().type(torch.LongTensor)
 
-    pad_mask_train = torch.from_numpy(np.array(pad_mask_train, dtype=np.float64)).float().type(torch.LongTensor)
-    pad_mask_valid = torch.from_numpy(np.array(pad_mask_valid, dtype=np.float64)).float().type(torch.LongTensor)
+    # pad_mask_train = torch.from_numpy(np.array(pad_mask_train, dtype=np.float64)).float().type(torch.LongTensor)
+    # pad_mask_valid = torch.from_numpy(np.array(pad_mask_valid, dtype=np.float64)).float().type(torch.LongTensor)
 
 
-    print(input_tensor_train.shape, target_tensor_train.shape, pad_mask_train.shape)
+    # print(input_tensor_train.shape, target_tensor_train.shape, pad_mask_train.shape)
 
     # print(input_tensor_train.shape, target_tensor_train.shape)
 
-    pad_mask_train = torch.LongTensor(pad_mask_train)
-    pad_mask_valid = torch.LongTensor(pad_mask_valid)
+    # pad_mask_train = torch.LongTensor(pad_mask_train)
+    # pad_mask_valid = torch.LongTensor(pad_mask_valid)
 
     # Pytorch train and test sets
-    train = TensorDataset(input_tensor_train, target_tensor_train, pad_mask_train)
-    test = TensorDataset(input_tensor_test, target_tensor_test, pad_mask_valid)
+    train = TensorDataset(input_tensor_train, target_tensor_train)
+    test = TensorDataset(input_tensor_test, target_tensor_test)
 
     print("TensorDataset created")
 
@@ -130,8 +131,8 @@ def train():
 
     # linear_layer = nn.Linear(hidden_dim, output_dim)
 
-    # if torch.cuda.is_available():
-    #     model.to(device=f"cuda:{visible_gpus}")
+    if torch.cuda.is_available():
+        model.to(device=f"cuda:{visible_gpus}")
         # linear_layer.to(device=f"cuda:{visible_gpus}")
 
     # Cross Entropy Loss
@@ -147,8 +148,8 @@ def train():
     count = 0
     print("training start")
     for epoch in range(num_epochs):
-        for i, (images, labels, pad_train) in enumerate(train_loader):
-
+        print(epoch)
+        for i, (images, labels) in enumerate(train_loader):
             # print("input image", images.shape)
             # print("input labels", labels.shape)
             # print("input pad", pad_train.shape)
@@ -167,6 +168,8 @@ def train():
             optimizer.zero_grad()
 
             # Forward propagation
+
+            # print("input train", train.shape)
 
             outputs = model(train)
 
@@ -199,8 +202,8 @@ def train():
 
             # print("output", outputs)
             # print("label", labels)
-            print("train shape", train.shape)
-            print("labels shape", labels.shape)
+            # print("train shape", outputs.shape)
+            # print("labels shape", labels.shape)
 
             loss = error(outputs, labels) # .to(device=device)
 
@@ -218,7 +221,7 @@ def train():
                 total = 0
                 # Iterate through test dataset
                 valid_output_list = []
-                for i, (images, labels, pad_valid) in enumerate(test_loader):
+                for i, (images, labels) in enumerate(test_loader):
                     # print("labels", labels)
                     images = Variable(images.view(-1, seq_len, input_dim))
                     # images = Variable(images).requires_grad_()
