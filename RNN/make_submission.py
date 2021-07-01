@@ -102,15 +102,16 @@ def make_submission():
 
     output_list = []
     count = 0
-    for i, (images, labels) in enumerate(test_loader):
-        with torch.no_grad():
+    with torch.no_grad():
+        model.eval()
+        for i, (images, labels) in enumerate(test_loader):
             for_test = images.view(-1, seq_len, input_dim)
             if torch.cuda.is_available():
                 for_test.to(device=f"cuda")
             # Forward propagation
-            h0_ = torch.zeros(layer_dim, for_test.size(0), hidden_dim, requires_grad=False).to(device="cuda")
-            c0_ = torch.zeros(layer_dim, for_test.size(0), hidden_dim, requires_grad=False).to(device="cuda")
-            output = model(for_test, h0_, c0_)
+            h0_ = torch.zeros(layer_dim, for_test.size(0), hidden_dim).to(device="cuda")
+            c0_ = torch.zeros(layer_dim, for_test.size(0), hidden_dim).to(device="cuda")
+            output = model(for_test, (h0_, c0_))
             output = torch.nn.functional.sigmoid(output)
             output_list.append(output[0][1].item())
 
