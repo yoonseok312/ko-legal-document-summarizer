@@ -111,7 +111,7 @@ def train():
     print("Dataloader created")
 
     # model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
-    model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+    model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, seq_len, device)
     # model = TransformerEncoder(
     #     d_model=input_dim,
     #     d_ff=hidden_dim,
@@ -122,8 +122,11 @@ def train():
     #     device=device
     # )
 
+    linear_layer = nn.Linear(hidden_dim, output_dim)
+
     if torch.cuda.is_available():
         model.to(device=f"cuda:{visible_gpus}")
+        linear_layer.to(device=f"cuda:{visible_gpus}")
 
     # Cross Entropy Loss
     error = nn.CrossEntropyLoss()
@@ -140,9 +143,15 @@ def train():
     for epoch in range(num_epochs):
         for i, (images, labels, pad_train) in enumerate(train_loader):
 
-
-            train = Variable(images.view(-1, seq_len, input_dim)).requires_grad_()
+            # print("input image", images.shape)
+            # print("input labels", labels.shape)
+            # print("input pad", pad_train.shape)
+            # train = Variable(images.view(-1, seq_len, input_dim)).requires_grad_()
+            train = Variable(images).requires_grad_()
             labels = Variable(labels)
+            # print("var image", train.shape)
+            # print("var labels", labels.shape)
+            # print("input pad", pad_train.shape)
 
             if torch.cuda.is_available():
                 train.to(device=f"cuda:{visible_gpus}")
@@ -168,8 +177,14 @@ def train():
             # print("output", outputs.shape)
             nonzeros = torch.nonzero(torch.LongTensor(pad_train), as_tuple=True)
             labels = labels[nonzeros[0], nonzeros[1]]
-            outputs = outputs[nonzeros[0] * nonzeros[1]]
-            labels = torch.flatten(labels)
+            # print("label gather", labels.shape)
+            # labels = torch.flatten(labels)
+            # print("label flatten", labels.shape)
+            outputs = outputs[nonzeros[0], nonzeros[1]]
+
+            outputs = linear_layer(outputs)
+            # outputs = outputs[nonzeros[0]]
+
 
             # print(labels.shape)
 
@@ -195,7 +210,9 @@ def train():
                 # Iterate through test dataset
                 valid_output_list = []
                 for i, (images, labels, pad_valid) in enumerate(test_loader):
-                    images = Variable(images.view(-1, seq_len, input_dim))
+                    # print("labels", labels)
+                    # images = Variable(images.view(-1, seq_len, input_dim))
+                    images = Variable(images).requires_grad_()
 
                     # Forward propagation
                     outputs = model(images)
@@ -204,7 +221,9 @@ def train():
 
                     # outputs = outputs[nonzeros[0], nonzeros[1]]
                     nonzeros = torch.nonzero(torch.LongTensor(pad_valid), as_tuple=True)
-                    outputs = outputs[nonzeros[0] * nonzeros[1]]
+                    # outputs = outputs[nonzeros[0]]
+                    outputs = outputs[nonzeros[0], nonzeros[1]]
+                    outputs = linear_layer(outputs)
 
                     valid_output_list += outputs
 
@@ -216,21 +235,28 @@ def train():
                     # print("label", labels.shape)
                     # labels = torch.flatten(labels)
                     labels = labels[nonzeros[0], nonzeros[1]]
-                    labels = torch.flatten(labels)
+                    # print("labels size", labels.shape)
+                    # labels = torch.flatten(labels)
+                    # print("labels flatten size", labels.shape)
 
                     # print("flatten", labels.shape)
                     # print("size 0", labels.size(0))
-
                     # Total number of labels
                     # print("label", labels.shape)
                     total += labels.size(0)
 
+                    # print("predicted size", predicted.shape)
+
                     correct += (predicted == labels.to(device=device)).sum()
+
+                # print("end")
 
                 if total == 0:
                     print("Can't calculate accuracy & hit rate")
                 else:
                     accuracy = 100 * correct / float(total)
+                    # print("output", valid_output_list)
+                    # print("hist", valid_ext_list_hit)
                     hit_rate = calc_hit_rate(valid_output_list, valid_ext_list_hit)
 
                 # store loss and iteration
