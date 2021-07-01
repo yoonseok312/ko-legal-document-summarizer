@@ -128,7 +128,7 @@ def make_submission():
         result = []
         for sent_num, sent in enumerate(article_original):
             if len(sent) > 6:
-                ext_pos = test_data.iloc[sent_count, ]
+                ext_pos = test_data.iloc[sent_count, 1]
                 if len(result) >= 3:
                     result = sorted(result, key=(lambda x: x[1]), reverse=True)
                     if ext_pos > result[-1][1]:

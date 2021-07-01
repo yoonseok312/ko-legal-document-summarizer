@@ -17,6 +17,7 @@ class RNNModel(nn.Module):
 
         self.device = device
 
+
         # RNN
         self.rnn = nn.RNN(input_dim, hidden_dim, layer_dim, batch_first=True, nonlinearity='relu').to(device=device)
 
