@@ -27,6 +27,7 @@ class RNNModel(nn.Module):
 
         self.to(device)
 
+
     def forward(self, x):
         # Initialize hidden state with zeros
         # print("input x", x.shape)

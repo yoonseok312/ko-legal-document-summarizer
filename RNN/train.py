@@ -15,7 +15,7 @@ def train():
     # LSTM configs
     batch_size = 50
     n_iters = 20000
-    visible_gpus = 0
+    visible_gpus = -1
     seed = 777
     input_dim = 10  # input dimension
     hidden_dim = 10  # hidden layer dimension
@@ -47,8 +47,9 @@ def train():
     # seq_len = 10
 
 
-    device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
-    device_id = 0 if device == f"cuda" else -1
+    device = "cpu"  # if visible_gpus == '-1' else f"cuda:{visible_gpus}"
+    # device_id = 0 if device == f"cuda" else -1
+    device_id = -1
 
     if device_id >= 0:
         torch.cuda.set_device(device_id)
@@ -84,14 +85,18 @@ def train():
     input_tensor_train = torch.from_numpy(np.array(input_train, dtype=np.float64)).float()
     input_tensor_test = torch.from_numpy(np.array(input_test, dtype=np.float64)).float()
 
+
     # target_tensor_train = torch.LongTensor(target_train)
 
     print("success")
     target_tensor_train = torch.from_numpy(np.array(target_train, dtype=np.float64)).float().type(torch.LongTensor)
     target_tensor_test = torch.from_numpy(np.array(target_test, dtype=np.float64)).float().type(torch.LongTensor)
 
+    pad_mask_train = torch.from_numpy(np.array(pad_mask_train, dtype=np.float64)).float().type(torch.LongTensor)
+    pad_mask_valid = torch.from_numpy(np.array(pad_mask_valid, dtype=np.float64)).float().type(torch.LongTensor)
 
-    print(input_tensor_train.shape, target_tensor_train.shape)
+
+    print(input_tensor_train.shape, target_tensor_train.shape, pad_mask_train.shape)
 
     # print(input_tensor_train.shape, target_tensor_train.shape)
 
@@ -111,8 +116,8 @@ def train():
 
     print("Dataloader created")
 
-    # model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
-    model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, seq_len, device)
+    model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+    # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, seq_len, device)
     # model = TransformerEncoder(
     #     d_model=input_dim,
     #     d_ff=hidden_dim,
@@ -123,11 +128,11 @@ def train():
     #     device=device
     # )
 
-    linear_layer = nn.Linear(hidden_dim, output_dim)
+    # linear_layer = nn.Linear(hidden_dim, output_dim)
 
-    if torch.cuda.is_available():
-        model.to(device=f"cuda:{visible_gpus}")
-        linear_layer.to(device=f"cuda:{visible_gpus}")
+    # if torch.cuda.is_available():
+    #     model.to(device=f"cuda:{visible_gpus}")
+        # linear_layer.to(device=f"cuda:{visible_gpus}")
 
     # Cross Entropy Loss
     error = nn.CrossEntropyLoss()
@@ -154,14 +159,15 @@ def train():
             # print("var labels", labels.shape)
             # print("input pad", pad_train.shape)
 
-            if torch.cuda.is_available():
-                train.to(device=f"cuda:{visible_gpus}")
-                labels.to(device=f"cuda:{visible_gpus}")
+            # if torch.cuda.is_available():
+            #     train.to(device=f"cuda:{visible_gpus}")
+            #     labels.to(device=f"cuda:{visible_gpus}")
 
             # Clear gradients
             optimizer.zero_grad()
 
             # Forward propagation
+
             outputs = model(train)
 
             # print(outputs.shape)
@@ -193,8 +199,10 @@ def train():
 
             # print("output", outputs)
             # print("label", labels)
+            print("train shape", train.shape)
+            print("labels shape", labels.shape)
 
-            loss = error(outputs, labels.to(device=device)) # .to(device=device)
+            loss = error(outputs, labels) # .to(device=device)
 
             # Calculating gradients
             loss.backward()

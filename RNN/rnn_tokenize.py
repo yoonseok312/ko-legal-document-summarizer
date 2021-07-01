@@ -34,7 +34,6 @@ def tokenize(input_dim: int):
     valid_sents = []
     test_sents = []
 
-
     for i in range(len(train_data)):
         for j in  range(len(train_data['sentence'][i])):
             # print(train_data['sentence'][i][j])
@@ -113,9 +112,9 @@ def create_dataset(
     input_train = []
     zero_list = [0] * input_dim
     max_sent_in_article = 50
-    for article in tqdm(tokenized_train_data):
-        print("num train article", len(tokenized_train_data))
-        for idx, sent in enumerate(article, start=1):
+    for idx, article in tqdm(enumerate(tokenized_train_data, start=1)):
+        # print("num train article", len(tokenized_train_data))
+        for sent in article:
             temp_list = []
             sent = sent[-seq_len:]
             for word_count, word in enumerate(sent):
@@ -137,8 +136,8 @@ def create_dataset(
     zero_list = [0] * input_dim
     max_sent_in_article = 50
     count = 0
-    for article in tqdm(tokenized_valid_data):
-        for idx, sent in enumerate(article, start=1):
+    for idx, article in tqdm(enumerate(tokenized_valid_data, start=1)):
+        for sent in article:
             temp_list = []
             sent = sent[-seq_len:]
             for word_count, word in enumerate(sent):
@@ -150,8 +149,8 @@ def create_dataset(
                     temp_list += zero_list
             temp_list = zero_list * (seq_len - len(sent)) + temp_list
             input_valid += [temp_list]
-            while len(input_valid) < 50 * idx:
-                input_valid += [[0] * input_dim * seq_len]
+        while len(input_valid) < 50 * idx:
+            input_valid += [[0] * input_dim * seq_len]
             # if len(input_valid) < 50 * idx or len(input_valid) > 50 * idx:
                 # print("valid error", len(input_valid))
 
