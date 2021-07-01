@@ -30,7 +30,7 @@ def hit_rate_stat():
 
     # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
     model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device).to(device=device)
-    model.load_state_dict((torch.load('./model/seq_len/model_26000.pth')))
+    model.load_state_dict((torch.load('./model/seq_len/model_53000.pth')))
 
     tokenized_data, tokenized_valid_data, embedding_model,  train_data, valid_data, l_tokenizer = tokenize(input_dim)
 
@@ -68,18 +68,18 @@ def hit_rate_stat():
 
     output_list = []
     count = 0
-    # for i, (images, labels) in enumerate(valid_loader):
-    #     for_test = Variable(images.view(-1, seq_len, input_dim))
+    for i, (images, labels) in enumerate(valid_loader):
+        for_test = Variable(images.view(-1, seq_len, input_dim))
 
-    #     if torch.cuda.is_available():
-    #         for_test.to(device=f"cuda:{visible_gpus}")
+        if torch.cuda.is_available():
+            for_test.to(device=f"cuda:{visible_gpus}")
 
-    #     # Forward propagation
-    #     output = model(for_test)
-    #     output = torch.nn.functional.softmax(output, dim=1)
-    #     output_list.append(output.data[0][1])
+        # Forward propagation
+        output = model(for_test)
+        output = torch.nn.functional.softmax(output, dim=1)
+        output_list.append(output.data[0][1])
 
-    # valid_data["if_ext"] = output_list
+    valid_data["if_ext"] = output_list
 
     sub = []
     sent_count = 0
@@ -99,31 +99,33 @@ def hit_rate_stat():
         else:
             t_dict[sent_len] = {key: value}
 
-    for n, data in valid.iterrows():
-               
+    sent_count = 0
+    for ext, article_len in valid_ext_list_hit:
         result = []
-        for n in ralen(valid_ext_list_hit[1]):
-            # ext_pos = valid_data.iloc[sent_count, 1].item()
-            ext_pos = 1
+        for sent_num in range(article_len):
+            sent = valid.iloc[sent_count][0]
+            ext_pos = valid_data.iloc[sent_count, 1]
             if len(result) >= 3:
                 result = sorted(result, key=(lambda x: x[1]), reverse=True)
                 if ext_pos > result[-1][1]:
                     result = result[:-1]
-                    result.append((snt_num, ext_pos, len(sent)))
+                    result.append((sent_num, ext_pos, article_len))
             else:
-                result.append((sent_num, ext_pos, len(sent)))
+                result.append((sent_num, ext_pos, article_len))
             sent_count += 1
         if len(result) != 3:
             print(result)
 
-        for sent_num, _, sent_len in result:
-            if sent_num in valid_ext_list_hit[n][0]:
-                dict_update('correct', sent_len, hit_rate_stat_dict, 1)
-            dict_update('correct', sent_len, hit_rate_stat_dict, 0)
-            dict_update('total', sent_len, hit_rate_stat_dict, 1)
+        for sent_num, _, article_len in result:
+            if sent_num in ext:
+                dict_update('correct', article_len, hit_rate_stat_dict, 1)
+            dict_update('correct', article_len, hit_rate_stat_dict, 0)
+            dict_update('total', article_len, hit_rate_stat_dict, 1)
+
+    hit_rate_stat_dict = dict(sorted(hit_rate_stat_dict.items(), key=lambda x:x[0]))
 
     for k, v in hit_rate_stat_dict.items():
-        print('sent_len: {}   acc: {}%   count: {}'.format(k, v['correct']/v['total']*100, v['total']))
+        print('article_len: {}   acc: {}%   count: {}'.format(k, v['correct']/v['total']*100, v['total']))
 
 if __name__ == '__main__':
     hit_rate_stat()
