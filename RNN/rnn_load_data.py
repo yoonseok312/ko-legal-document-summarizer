@@ -81,7 +81,7 @@ def load_data(mode: str):
                 for j in range(len(train_data["sentence"][i])):
                     train_data["sentence"][i][j] = train_data["sentence"][i][j].replace(c, " ")
 
-        train_data.to_pickle(f"./data/{mode}_df.pickle")
+        train_data.to_pickle(f"./data/{mode}_article_df.pickle")
 
     elif mode == 'valid':
         valid = pd.read_pickle("./data/valid_unprocessed_df.pickle")
@@ -118,7 +118,7 @@ def load_data(mode: str):
                 for j in range(len(valid_data["sentence"][i])):
                     valid_data["sentence"][i][j] = valid_data["sentence"][i][j].replace(c, " ")
 
-        valid_data.to_pickle(f"./data/valid_df.pickle")
+        valid_data.to_pickle(f"./data/valid_article_df.pickle")
         with open("./data/valid_ext_list_hit", "wb") as f:
             pickle.dump(valid_ext_list_hit, f)
 
@@ -152,7 +152,7 @@ def load_data(mode: str):
                     for j in range(len(test_data["sentence"][i])):
                         test_data["sentence"][i][j] = test_data["sentence"][i][j].replace(c, " ")
 
-            test_data.to_pickle(f"./data/{mode}_df.pickle")
+            test_data.to_pickle(f"./data/{mode}_article_df.pickle")
 if __name__ == '__main__':
     split_data()
     print("processing train...")
