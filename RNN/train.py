@@ -46,6 +46,7 @@ def train():
     # output_dim = 2  # output dimension
     # seq_len = 10
 
+
     device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
     device_id = 0 if device == f"cuda" else -1
 

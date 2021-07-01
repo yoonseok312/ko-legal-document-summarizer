@@ -114,6 +114,7 @@ def create_dataset(
     zero_list = [0] * input_dim
     max_sent_in_article = 50
     for article in tqdm(tokenized_train_data):
+        print("num train article", len(tokenized_train_data))
         for idx, sent in enumerate(article, start=1):
             temp_list = []
             sent = sent[-seq_len:]
@@ -126,18 +127,17 @@ def create_dataset(
                     temp_list += zero_list
             temp_list = zero_list * (seq_len - len(sent)) + temp_list
             input_train += [temp_list]
-            while len(input_train) < 50 * idx:
-                input_train += [[0] * input_dim * seq_len]
-            if len(input_train) < 50 * idx or len(input_train) > 50 * idx:
-                print("train error", len(input_train))
+        while len(input_train) < 50 * idx:
+            input_train += [[0] * input_dim * seq_len]
+        if len(input_train) < 50 * idx or len(input_train) > 50 * idx:
+            print("train error", idx, len(input_train))
         # input_train += [article_list]
 
     input_valid = []
     zero_list = [0] * input_dim
     max_sent_in_article = 50
     count = 0
-    for article in tqdm(tokenized_train_data):
-        print("num train article", len(tokenized_train_data))
+    for article in tqdm(tokenized_valid_data):
         for idx, sent in enumerate(article, start=1):
             temp_list = []
             sent = sent[-seq_len:]
@@ -151,12 +151,12 @@ def create_dataset(
             temp_list = zero_list * (seq_len - len(sent)) + temp_list
             input_valid += [temp_list]
             while len(input_valid) < 50 * idx:
-                print("add")
                 input_valid += [[0] * input_dim * seq_len]
-            if len(input_valid) < 50 * idx or len(input_valid) > 50 * idx:
-                print("valid error", len(input_valid))
+            # if len(input_valid) < 50 * idx or len(input_valid) > 50 * idx:
+                # print("valid error", len(input_valid))
 
     print("loop end")
+
 
     target_train = []
     pad_mask_train = []
