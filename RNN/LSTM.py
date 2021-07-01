@@ -20,12 +20,14 @@ class LSTMModel(nn.Module):
         self.fc = nn.Linear(hidden_dim, output_dim)
         
 
-    def forward(self, x, h0, c0):
+    def forward(self, x):
 
         # 28 time steps
         # We need to detach as we are doing truncated backpropagation through time (BPTT)
         # If we don't, we'll backprop all the way to the start even after going through another batch
-        out, (hn, cn) = self.lstm(x, (h0, c0))
+        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim, device='cuda', requires_grad=True)
+        c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim, device='cuda', requires_grad=True)
+        out, (_, __) = self.lstm(x,(h0, c0))
 
         # Index hidden state of last time step
         # out.size() --> 100, 28, 100

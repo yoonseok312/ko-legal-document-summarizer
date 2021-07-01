@@ -5,12 +5,13 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from model import RNNModel
 from LSTM import LSTMModel
-from rnn_tokenize import tokenize, create_dataset
+from rnn_tokenize import tokenize
+#from rnn_tokenize import create_dataset
 import numpy as np
 import random
 import pickle
 from tensorboardX import SummaryWriter
-from multiprocessing import Pool
+from sentence_dataset import SentenceDataset
 import datetime
 
 now = datetime.datetime.now().strftime('%H-%M')
@@ -19,7 +20,7 @@ def train():
     writer =  SummaryWriter()
 
     # LSTM configs
-    batch_size = 64
+    batch_size = 32
     n_iters = 50000
     visible_gpus = 0
     seed = 7777
@@ -27,9 +28,9 @@ def train():
     # Create RNN
     input_dim = 128  # input dimension
     hidden_dim = 256 # hidden layer dimension
-    layer_dim = 8  # number of hidden layers
+    layer_dim = 4  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 160
+    seq_len = 40
 
     # # RNN configs
     # batch_size = 32
@@ -69,42 +70,26 @@ def train():
     np.random.seed(seed)
 
     tokenized_data, tokenized_valid_data, embedding_model, target_train, target_test, _ = tokenize(input_dim)
-    input_train, input_test = create_dataset(
-        tokenized_data,
-        tokenized_valid_data,
-        embedding_model,
-        input_dim,
-        seq_len)
 
-    print("opening  valid_ext_list_hit")
-    with open("./data/valid_ext_list_hit", "rb") as f:
-        valid_ext_list_hit = pickle.load(f)
+    # print("opening  valid_ext_list_hit")
+    # with open("./data/valid_ext_list_hit", "rb") as f:
+    #     valid_ext_list_hit = pickle.load(f)
 
-    num_epochs = n_iters / (len(input_train) / batch_size)
+    num_epochs = n_iters / (len(tokenized_data) / batch_size)
     num_epochs = int(num_epochs)
 
-    print("changing to tensors...")
-    # Pytorch train and test sets
-
-    input_tensor_train = torch.tensor(input_train)
-    input_tensor_test = torch.tensor(input_test)
-
-    target_tensor_train = torch.tensor(target_train)
-    target_tensor_test = torch.tensor(target_test)
-
-    # print(input_tensor_train.shape, target_tensor_train.shape)
 
     # Pytorch train and test sets
-    print("running tensorDataset")
-    train = TensorDataset(input_tensor_train, target_tensor_train)
-    test = TensorDataset(input_tensor_test, target_tensor_test)
+    print("-----Initializing SentenceDataset")
+    train = SentenceDataset(tokenized_data, target_train, embedding_model, seq_len, input_dim)
+    test = SentenceDataset(tokenized_valid_data, target_test, embedding_model, seq_len, input_dim)
 
-    print("running dataloader")
+    print("-----Initializing dataloader")
     # data loader
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test, batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=False, num_workers=16)
+    test_loader = DataLoader(test, batch_size=batch_size, shuffle=False, num_workers=16)
 
-    print("initializing lstm model")
+    print("-----Initializing lstm model")
     model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim)
     # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
 
@@ -122,7 +107,7 @@ def train():
     iteration_list = []
     accuracy_list = []
     count = 0
-    print("training start")
+    print("-----Training start")
     for epoch in range(num_epochs):
         for i, (images, labels) in enumerate(train_loader):
             model.train()
@@ -136,10 +121,10 @@ def train():
 
             # Forward propagation
             # Initialize hidden state with zeros
-            h0 = torch.zeros(layer_dim, train.size(0), hidden_dim, requires_grad=True).to(device="cuda")
+            #h0 = torch.zeros(layer_dim, train.size(0), hidden_dim, requires_grad=True).to(device="cuda")
             # Initialize cell state
-            c0 = torch.zeros(layer_dim, train.size(0), hidden_dim, requires_grad=True).to(device="cuda")
-            outputs = model(train, h0, c0)
+            #c0 = torch.zeros(layer_dim, train.size(0), hidden_dim, requires_grad=True).to(device="cuda")
+            outputs = model(train)
 
             # Calculate softmax and ross entropy loss
 
@@ -160,20 +145,22 @@ def train():
                 correct = 0
                 total = 0
                 # Iterate through test dataset
-                valid_output_list = []
+                #valid_output_list = []
                 with torch.no_grad():
                     model.eval()
                     for images_, labels_ in test_loader:
                         images_, labels_ = images_.to("cuda"), labels_.to("cuda")
+                        total += labels_.size(0)
                         images_ = images_.view(-1, seq_len, input_dim)
-                        h0_ = torch.zeros(layer_dim, images_.size(0), hidden_dim, requires_grad=False).to(device="cuda")
-                        c0_ = torch.zeros(layer_dim, images_.size(0), hidden_dim, requires_grad=False).to(device="cuda")
-                        outputs_ = model(images_, h0_, c0_)
-                        valid_output_list += outputs_
+                        # h0_ = torch.zeros(layer_dim, images_.size(0), hidden_dim, requires_grad=False).to(device="cuda")
+                        # c0_ = torch.zeros(layer_dim, images_.size(0), hidden_dim, requires_grad=False).to(device="cuda")
+                        outputs_ = model(images_)
                         # Get predictions from the maximum value
                         predicted = torch.max(outputs_.data, 1)[1]
                         # Total number of labels
-                        total += labels_.size(0)
+                        #valid_output_list += outputs_
+
+
                         correct += torch.eq(predicted, labels_).sum().item()
 
                     accuracy = 100 * correct / float(total)
@@ -225,6 +212,7 @@ def calc_hit_rate(output_list, metadata):
                 count_son += 1
             count_mom += 1
     return count_son / count_mom
+
 
 
 if __name__ == '__main__':
