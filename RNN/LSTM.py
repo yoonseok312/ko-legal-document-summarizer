@@ -25,7 +25,6 @@ class LSTMModel(nn.Module):
 
         self.device = device
 
-
     def forward(self, x):
         # Initialize hidden state with zeros
         h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim, device=self.device).requires_grad_()

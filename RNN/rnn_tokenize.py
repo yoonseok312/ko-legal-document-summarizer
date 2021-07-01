@@ -85,6 +85,5 @@ def create_dataset(
 
     print("loop end")
 
-
     print("dataset end")
     return input_train, input_valid

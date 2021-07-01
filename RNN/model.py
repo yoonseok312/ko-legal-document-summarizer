@@ -27,7 +27,6 @@ class RNNModel(nn.Module):
         self.to(device)
 
 
-
     def forward(self, x):
         # Initialize hidden state with zeros
         h0 = Variable(torch.zeros(self.layer_dim, x.size(0), self.hidden_dim, device=self.device))
