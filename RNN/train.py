@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from model import RNNModel
 from LSTM import LSTMModel
@@ -19,17 +17,17 @@ def train():
     writer =  SummaryWriter()
 
     # LSTM configs
-    batch_size = 64
-    n_iters = 50000
+    batch_size = 32
+    n_iters = 10000000
     visible_gpus = 0
     seed = 7777
 
     # Create RNN
     input_dim = 128  # input dimension
     hidden_dim = 256 # hidden layer dimension
-    layer_dim = 8  # number of hidden layers
+    layer_dim = 4  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 160
+    seq_len = 40
 
     # # RNN configs
     # batch_size = 32
@@ -80,8 +78,8 @@ def train():
     with open("./data/valid_ext_list_hit", "rb") as f:
         valid_ext_list_hit = pickle.load(f)
 
-    num_epochs = n_iters / (len(input_train) / batch_size)
-    num_epochs = int(num_epochs)
+    #num_epochs = n_iters / (len(input_train) / batch_size)
+    num_epochs = 100
 
     print("changing to tensors...")
     # Pytorch train and test sets
@@ -89,8 +87,8 @@ def train():
     input_tensor_train = torch.tensor(input_train)
     input_tensor_test = torch.tensor(input_test)
 
-    target_tensor_train = torch.tensor(target_train)
-    target_tensor_test = torch.tensor(target_test)
+    target_tensor_train = torch.tensor(target_train).type(torch.LongTensor)
+    target_tensor_test = torch.tensor(target_test).type(torch.LongTensor)
 
     # print(input_tensor_train.shape, target_tensor_train.shape)
 
@@ -136,9 +134,9 @@ def train():
 
             # Forward propagation
             # Initialize hidden state with zeros
-            h0 = torch.zeros(layer_dim, train.size(0), hidden_dim, requires_grad=True).to(device="cuda")
+            h0 = torch.zeros(layer_dim, train.size(0), hidden_dim).to(device="cuda")
             # Initialize cell state
-            c0 = torch.zeros(layer_dim, train.size(0), hidden_dim, requires_grad=True).to(device="cuda")
+            c0 = torch.zeros(layer_dim, train.size(0), hidden_dim).to(device="cuda")
             outputs = model(train, h0, c0)
 
             # Calculate softmax and ross entropy loss
