@@ -30,14 +30,14 @@ def make_submission():
 
     # Create RNN
     input_dim = 128  # input dimension
-    hidden_dim = 256  # hidden layer dimension
-    layer_dim = 4  # number of hidden layers
+    hidden_dim = 256 # hidden layer dimension
+    layer_dim = 8  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 50
+    seq_len = 160
 
 
 
-    device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
+    device = "cpu" if visible_gpus == '-1' else f"cuda"
     device_id = 0 if device == f"cuda" else -1
 
     # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
@@ -45,10 +45,18 @@ def make_submission():
     model.load_state_dict((torch.load('./model/seq_len_40_2/model_26000.pth')))
 
     train_data = pd.read_pickle(f"./data/train_df.pickle")
+    valid_data = pd.read_pickle(f"./data/valid_df.pickle")
+    test_data = pd.read_pickle(f"./data/test_df.pickle")
+
+    train_sent = train_data['sentence']
+    valid_sent = valid_data['sentence']
+    test_sent = test_data['sentence']
+    all_sent = pd.concat([train_sent, valid_sent, test_sent])
+
     tokenized_data, tokenized_valid_data, embedding_model, target_train, target_test, l_tokenizer = tokenize(input_dim)
 
     word_extractor = WordExtractor()
-    word_extractor.train(train_data['sentence'])
+    word_extractor.train(all_sent)
     # word_score_table = word_extractor.extract()
 
     with open("./data/test.json", "r", encoding='UTF-8-sig') as st_json:
@@ -95,15 +103,16 @@ def make_submission():
     output_list = []
     count = 0
     for i, (images, labels) in enumerate(test_loader):
-        for_test = Variable(images.view(-1, seq_len, input_dim))
-
-        if torch.cuda.is_available():
-            for_test.to(device=f"cuda:{visible_gpus}")
-
-        # Forward propagation
-        output = model(for_test)
-        output = torch.nn.functional.sigmoid(output)
-        output_list.append(output[0][1].item())
+        with torch.no_grad():
+            for_test = images.view(-1, seq_len, input_dim)
+            if torch.cuda.is_available():
+                for_test.to(device=f"cuda")
+            # Forward propagation
+            h0_ = torch.zeros(layer_dim, for_test.size(0), hidden_dim, requires_grad=False).to(device="cuda")
+            c0_ = torch.zeros(layer_dim, for_test.size(0), hidden_dim, requires_grad=False).to(device="cuda")
+            output = model(for_test, h0_, c0_)
+            output = torch.nn.functional.sigmoid(output)
+            output_list.append(output[0][1].item())
 
     test_data["if_ext"] = output_list
 
