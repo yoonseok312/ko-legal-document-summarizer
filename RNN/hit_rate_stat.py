@@ -12,6 +12,7 @@ from soynlp.word import WordExtractor
 from rnn_tokenize import tokenize, create_dataset
 from model import RNNModel
 from LSTM import LSTMModel
+import pickle
 
 def hit_rate_stat():
 
@@ -29,7 +30,7 @@ def hit_rate_stat():
 
     # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
     model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device).to(device=device)
-    model.load_state_dict(torch.load('./model/seq_len/model_26000.pth', map_location=torch.device('cpu')))
+    model.load_state_dict((torch.load('./model/seq_len/model_26000.pth')))
 
     tokenized_data, tokenized_valid_data, embedding_model,  train_data, valid_data, l_tokenizer = tokenize(input_dim)
 
@@ -65,27 +66,27 @@ def hit_rate_stat():
 
     print("Loaded valid dataset")
 
-    seq_dim = 20
     output_list = []
     count = 0
-    for i, (images, labels) in enumerate(valid_loader):
-        for_test = Variable(images.view(-1, seq_dim, input_dim))
+    # for i, (images, labels) in enumerate(valid_loader):
+    #     for_test = Variable(images.view(-1, seq_len, input_dim))
 
-        if torch.cuda.is_available():
-            for_test.to(device=f"cuda:{visible_gpus}")
+    #     if torch.cuda.is_available():
+    #         for_test.to(device=f"cuda:{visible_gpus}")
 
-        # Forward propagation
-        output = model(for_test)
-        output = torch.nn.functional.softmax(output, dim=1)
-        output_list.append(output.data[0][1])
+    #     # Forward propagation
+    #     output = model(for_test)
+    #     output = torch.nn.functional.softmax(output, dim=1)
+    #     output_list.append(output.data[0][1])
 
-    valid_data["if_ext"] = output_list
+    # valid_data["if_ext"] = output_list
 
     sub = []
     sent_count = 0
 
-    with open(f"./data/valid.json", "r", encoding='UTF-8-sig') as st_json:
-        valid = json.load(st_json)
+    valid = pd.read_pickle(f"./data/valid_df.pickle")
+
+    valid_ext_list_hit = pd.read_pickle("./data/valid_ext_list_hit.pickle")
 
     hit_rate_stat_dict = {}
 
@@ -98,28 +99,25 @@ def hit_rate_stat():
         else:
             t_dict[sent_len] = {key: value}
 
-    for n, data in enumerate(valid):
-        article_original = data['article_original']
-        ext = data['extractive']
-        
+    for n, data in valid.iterrows():
+               
         result = []
-        for sent_num, sent in enumerate(article_original):
-            ext_pos = valid_data.iloc[sent_count, 1].item()
+        for n in ralen(valid_ext_list_hit[1]):
+            # ext_pos = valid_data.iloc[sent_count, 1].item()
+            ext_pos = 1
             if len(result) >= 3:
                 result = sorted(result, key=(lambda x: x[1]), reverse=True)
                 if ext_pos > result[-1][1]:
                     result = result[:-1]
-                    result.append((sent_num, ext_pos, len(sent)))
+                    result.append((snt_num, ext_pos, len(sent)))
             else:
                 result.append((sent_num, ext_pos, len(sent)))
             sent_count += 1
         if len(result) != 3:
             print(result)
-        
-
 
         for sent_num, _, sent_len in result:
-            if sent_num in ext:
+            if sent_num in valid_ext_list_hit[n][0]:
                 dict_update('correct', sent_len, hit_rate_stat_dict, 1)
             dict_update('correct', sent_len, hit_rate_stat_dict, 0)
             dict_update('total', sent_len, hit_rate_stat_dict, 1)

@@ -95,8 +95,7 @@ def load_data(mode: str):
             valid_data["sentence"] = valid_data["sentence"].str.replace(c, " ")
 
         valid_data.to_pickle(f"./data/valid_df.pickle")
-        with open("./data/valid_ext_list_hit", "wb") as f:
-            pickle.dump(valid_ext_list_hit, f)
+        valid_ext_list_hit.to_pickle("./data/valid_ext_list_hit.pickle")
 
     else:
         with open(f"./data/{mode}.json", "r", encoding='UTF-8-sig') as st_json:
