@@ -17,11 +17,11 @@ def train():
     n_iters = 20000000
     visible_gpus = 0
     seed = 777
-    input_dim = 128  # input dimension
-    hidden_dim = 256  # hidden layer dimension
+    input_dim = 10  # input dimension
+    hidden_dim = 20  # hidden layer dimension
     layer_dim = 1  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 20
+    seq_len = 2
 
     # RNN configs
     # batch_size = 16
@@ -231,11 +231,17 @@ def train():
                 for i, (images, labels, pad_mask_valid) in enumerate(test_loader):
                     # print("labels", labels)
                     images = Variable(images.view(-1, seq_len, input_dim))
+
+
                     # images = Variable(images).requires_grad_()
 
                     nonzeros = torch.nonzero(pad_mask_valid, as_tuple=True)
+                    # print(len(nonzeros))
                     images = images[nonzeros[0]]
                     labels = labels[nonzeros[0]]
+                    print(images)
+                    print(images.shape)
+                    print("--------------------------")
 
                     # Forward propagation
                     outputs = model(images)
@@ -271,7 +277,7 @@ def train():
                     # print("predicted size", predicted.shape)
 
                     correct += (predicted == labels.to(device=device)).sum()
-                    print(predicted)
+                    # print(predicted)
                     print("acc", correct, total)
 
                 # print("end")

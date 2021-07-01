@@ -66,6 +66,7 @@ def tokenize(input_dim: int):
         # for sentence in all_sents[index]:
             # print(sentence)
             # break
+
     for article in all_data['sentence']:
         temp = []
         for sentence in article:

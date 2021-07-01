@@ -25,7 +25,6 @@ def split_data():
         train_ids = []
         valid_ids = []
 
-
         for i in range(total_dataset_size):
             id_by_length[len(df.iloc[i]['article_original'])].append(df.iloc[i]['id'])
 
