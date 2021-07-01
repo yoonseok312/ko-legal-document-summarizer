@@ -82,7 +82,5 @@ def create_dataset(
         input_valid += [temp_list]
 
     print("loop end")
-
-
     print("dataset end")
     return input_train, input_valid

@@ -11,27 +11,27 @@ import random
 import pickle
 from tensorboardX import SummaryWriter
 from multiprocessing import Pool
+import datetime
 
-
-
+now = datetime.datetime.now().strftime('%H-%M')
 def train():
     #tensorboard settings
     writer =  SummaryWriter()
 
     # LSTM configs
-    batch_size = 32
+    batch_size = 64
     n_iters = 50000
     visible_gpus = 0
     seed = 7777
 
     # Create RNN
     input_dim = 128  # input dimension
-    hidden_dim = 256  # hidden layer dimension
-    layer_dim = 4  # number of hidden layers
+    hidden_dim = 256 # hidden layer dimension
+    layer_dim = 8  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 40
+    seq_len = 160
 
-    # RNN configs
+    # # RNN configs
     # batch_size = 32
     # n_iters = 40000
     # visible_gpus = 0
@@ -41,7 +41,7 @@ def train():
     # hidden_dim = 256  # hidden layer dimension
     # layer_dim = 4  # number of hidden layers
     # output_dim = 2  # output dimension
-    # seq_len = 50
+    # seq_len = 40
 
     # batch_size = 256
     # n_iters = 20000
@@ -54,7 +54,7 @@ def train():
     # output_dim = 2  # output dimension
     # seq_len = 10
 
-    device = "cpu" if visible_gpus == '-1' else f"cuda:{visible_gpus}"
+    device = "cpu" if visible_gpus == '-1' else f"cuda"
     device_id = 0 if device == f"cuda" else -1
 
     if device_id >= 0:
@@ -83,14 +83,14 @@ def train():
     num_epochs = n_iters / (len(input_train) / batch_size)
     num_epochs = int(num_epochs)
 
-    print("running from_numpy")
+    print("changing to tensors...")
     # Pytorch train and test sets
 
-    input_tensor_train = torch.from_numpy(np.array(input_train, dtype=np.float64)).float()
-    input_tensor_test = torch.from_numpy(np.array(input_test, dtype=np.float64)).float()
+    input_tensor_train = torch.tensor(input_train)
+    input_tensor_test = torch.tensor(input_test)
 
-    target_tensor_train = torch.from_numpy(np.array(target_train, dtype=np.float64)).float().type(torch.LongTensor)
-    target_tensor_test = torch.from_numpy(np.array(target_test, dtype=np.float64)).float().type(torch.LongTensor)
+    target_tensor_train = torch.tensor(target_train)
+    target_tensor_test = torch.tensor(target_test)
 
     # print(input_tensor_train.shape, target_tensor_train.shape)
 
@@ -105,11 +105,11 @@ def train():
     test_loader = DataLoader(test, batch_size=batch_size, shuffle=False)
 
     print("initializing lstm model")
-    model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim, device)
+    model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim)
     # model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, device)
 
     if torch.cuda.is_available():
-        model.to(device=f"cuda:{visible_gpus}")
+        model = model.to(device=f"cuda")
 
     # Cross Entropy Loss
     error = nn.CrossEntropyLoss()
@@ -125,24 +125,25 @@ def train():
     print("training start")
     for epoch in range(num_epochs):
         for i, (images, labels) in enumerate(train_loader):
-
-
-            train = Variable(images.view(-1, seq_len, input_dim)).requires_grad_()
-            labels = Variable(labels)
+            model.train()
+            train = images.view(-1, seq_len, input_dim)
 
             if torch.cuda.is_available():
-                train.to(device=f"cuda:{visible_gpus}")
-                labels.to(device=f"cuda:{visible_gpus}")
+                train, labels = train.to(device=f"cuda"), labels.to(device=f"cuda")
 
             # Clear gradients
             optimizer.zero_grad()
 
             # Forward propagation
-            outputs = model(train)
+            # Initialize hidden state with zeros
+            h0 = torch.zeros(layer_dim, train.size(0), hidden_dim, requires_grad=True).to(device="cuda")
+            # Initialize cell state
+            c0 = torch.zeros(layer_dim, train.size(0), hidden_dim, requires_grad=True).to(device="cuda")
+            outputs = model(train, h0, c0)
 
             # Calculate softmax and ross entropy loss
 
-            loss = error(outputs, labels.to(device=device))
+            loss = error(outputs, labels)
 
             # Calculating gradients
             loss.backward()
@@ -153,41 +154,42 @@ def train():
             count += 1
             
             writer.add_scalar('train loss', loss.data ,count)
+
             if count % 500 == 0:
                 # Calculate Accuracy
                 correct = 0
                 total = 0
                 # Iterate through test dataset
                 valid_output_list = []
-                for images, labels in test_loader:
-                    images = Variable(images.view(-1, seq_len, input_dim))
+                with torch.no_grad():
+                    model.eval()
+                    for images_, labels_ in test_loader:
+                        images_, labels_ = images_.to("cuda"), labels_.to("cuda")
+                        images_ = images_.view(-1, seq_len, input_dim)
+                        h0_ = torch.zeros(layer_dim, images_.size(0), hidden_dim, requires_grad=False).to(device="cuda")
+                        c0_ = torch.zeros(layer_dim, images_.size(0), hidden_dim, requires_grad=False).to(device="cuda")
+                        outputs_ = model(images_, h0_, c0_)
+                        valid_output_list += outputs_
+                        # Get predictions from the maximum value
+                        predicted = torch.max(outputs_.data, 1)[1]
+                        # Total number of labels
+                        total += labels_.size(0)
+                        correct += torch.eq(predicted, labels_).sum().item()
 
-                    # Forward propagation
-                    outputs = model(images)
+                    accuracy = 100 * correct / float(total)
+                    #hit_rate = calc_hit_rate(valid_output_list, valid_ext_list_hit)
 
-                    valid_output_list += outputs
+                    writer.add_scalar('accuracy', accuracy, count)
 
-                    # Get predictions from the maximum value
-                    predicted = torch.max(outputs.data, 1)[1]
+                    # store loss and iteration
+                    loss_list.append(loss.data)
+                    iteration_list.append(count)
+                    accuracy_list.append(accuracy)
+                    print('Epoch: {} Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(epoch, count, loss.data, accuracy, 100))
+                    if count % 500 == 0:
+                        torch.save(model.state_dict(), f'./model/seq_len_{seq_len}/model_{str(count)}_{now}.pth')
 
-                    # Total number of labels
-                    total += labels.size(0)
 
-                    correct += (predicted == labels.to(device=device)).sum()
-
-                accuracy = 100 * correct / float(total)
-                hit_rate = calc_hit_rate(valid_output_list, valid_ext_list_hit)
-
-                writer.add_scalar('accuracy', accuracy, count)
-                writer.add_scalar('hit rate', hit_rate, count)
-
-                # store loss and iteration
-                loss_list.append(loss.data)
-                iteration_list.append(count)
-                accuracy_list.append(accuracy)
-                print('Epoch: {} Iteration: {}  Loss: {}  Accuracy: {} % Hit_rate: {} %'.format(epoch, count, loss.data, accuracy, hit_rate))
-                if count % 500 == 0:
-                    torch.save(model.state_dict(), f'./model/seq_len_{seq_len}_2/model_{str(count)}.pth')
     writer.close()
 def get_sub_list(output_list, metadata):
     sub = []

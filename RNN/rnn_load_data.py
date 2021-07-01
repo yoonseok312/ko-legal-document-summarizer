@@ -16,7 +16,6 @@ def split_data():
         train = json.load(st_json)
 
         df = pd.DataFrame(train)
-        
         ratio = 0.9
         id_by_length = collections.defaultdict(list)
         total_dataset_size = len(df)
