@@ -47,6 +47,7 @@ class LSTMModel(nn.Module):
         # out.size() --> 100, 10
         return out
 
+
 class Generator(nn.Module):
     def __init__(self, d_model, output_dim, hp=None):
         super().__init__()

@@ -98,6 +98,7 @@ def make_submission():
     print("Loaded test dataset")
 
     output_list = []
+    rnn_output_list = []
     count = 0
     for i, (images, labels) in enumerate(test_loader):
         for_test = Variable(images.view(-1, seq_len, input_dim))
@@ -108,12 +109,15 @@ def make_submission():
         # Forward propagation
         output = model(for_test)
         rnn_output = rnn_model(for_test)
-        if output.size(0) == rnn_output.size(0):
-            output = torch.mul(output, 0.6) + torch.mul(rnn_output, 0.4)
+        # if output.size(0) == rnn_output.size(0):
+        #     output = torch.mul(output, 0.6) + torch.mul(rnn_output, 0.4)
         output = torch.nn.functional.sigmoid(output)
+        rnn_output = torch.nn.functional.sigmoid(rnn_output)
         output_list.append(output[0][1].item())
+        rnn_output_list.append(rnn_output[0][1].item())
 
     test_data["if_ext"] = output_list
+    test_data["if_ext_rnn"] = rnn_output_list
 
     sub = []
     sent_count = 0
@@ -123,15 +127,26 @@ def make_submission():
         id = data['id']
         result = []
         for sent_num, sent in enumerate(article_original):
-            ext_pos = test_data.iloc[sent_count, 1]
-            if len(result) >= 3:
-                result = sorted(result, key=(lambda x: x[1]), reverse=True)
-                if ext_pos > result[-1][1]:
-                    result = result[:-1]
+            if len(sent) > 6:
+                ext_pos = test_data.iloc[sent_count, ]
+                if len(result) >= 3:
+                    result = sorted(result, key=(lambda x: x[1]), reverse=True)
+                    if ext_pos > result[-1][1]:
+                        result = result[:-1]
+                        result.append((sent_num, ext_pos))
+                else:
                     result.append((sent_num, ext_pos))
+                sent_count += 1
             else:
-                result.append((sent_num, ext_pos))
-            sent_count += 1
+                ext_pos = test_data.iloc[sent_count, 2]
+                if len(result) >= 3:
+                    result = sorted(result, key=(lambda x: x[1]), reverse=True)
+                    if ext_pos > result[-1][1]:
+                        result = result[:-1]
+                        result.append((sent_num, ext_pos))
+                else:
+                    result.append((sent_num, ext_pos))
+                sent_count += 1
         if len(result) != 3:
             print(result)
         sorted(result, key=(lambda x: x[1]), reverse=True)
@@ -144,7 +159,7 @@ def make_submission():
         for i in range(3):
             submission_template[n]['summary_index' + str(i + 1)] = sub[n][i][0]
 
-    with open("./output/ensemble_after_train.json", "w") as json_file:
+    with open("./output/ensemble_over_6.json", "w") as json_file:
         json.dump(submission_template, json_file)
 
 if __name__ == '__main__':
