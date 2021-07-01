@@ -3,7 +3,6 @@ from soynlp.word import WordExtractor
 from soynlp.tokenizer import LTokenizer
 from gensim.models.word2vec import Word2Vec
 from tqdm import tqdm
-
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -13,6 +12,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 from typing import List
 import json
+import os.path
 
 def tokenize(input_dim: int):
 
@@ -23,21 +23,32 @@ def tokenize(input_dim: int):
     train_sent = train_data['sentence']
     valid_sent = valid_data['sentence']
     test_sent = test_data['sentence']
-
     all_sent = pd.concat([train_sent, valid_sent, test_sent])
 
     word_extractor = WordExtractor()
-    word_extractor.train(all_sent)
-    word_score_table = word_extractor.extract()
+    if os.path.isfile('./word_extractor.model'):
+        print("Extractor model Found! Loading...")
+        word_extractor.load('./word_extractor.model')
+    else:
+        print("Extractor model not Found! Training...")
+        word_extractor.train(all_sent)
+        word_extractor.save('./word_extractor.model')
 
+    word_score_table = word_extractor.extract()
+    
     scores = {word: score.cohesion_forward for word, score in word_score_table.items()}
     l_tokenizer = LTokenizer(scores=scores)
     tokenized_all_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in all_sent]
     tokenized_train_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in train_sent]
     tokenized_valid_data = [l_tokenizer.tokenize(sentence, flatten=True) for sentence in valid_sent]
-
-    embedding_model = Word2Vec(sentences=tokenized_all_data, vector_size=input_dim, window=8, min_count=1, workers=16, sg=0)
-
+    
+    if os.path.isfile('./word2vec.model'):
+        print("Word2Vec Embedding model Found! Loading...")
+        embedding_model = Word2Vec.load('./word2vec.model')
+    else:
+        print("Word2Vec Embedding model not Found! Training...")
+        embedding_model = Word2Vec(sentences=tokenized_all_data, vector_size=input_dim, window=8, min_count=0, workers=16, sg=0)
+        embedding_model.save('./word2vec.model')
     target_train = list(train_data['if_ext'])
     target_valid = list(valid_data['if_ext'])
 
@@ -58,8 +69,6 @@ def create_dataset(
         temp_list = []
         sent = sent[-seq_len:]
         for word_count, word in enumerate(sent):
-            if word_count == seq_len:
-                break
             if word in embedding_model.wv:
                 temp_list += [rating for rating in embedding_model.wv[word]]
             else:
