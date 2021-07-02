@@ -21,7 +21,7 @@ class SentenceDataset(Dataset):
             else:
                 sent_input_vec += zero_list
         sent_input_vec = zero_list * (self.seq_len - len(sent)) + sent_input_vec
-        return torch.tensor(sent_input_vec), torch.tensor(self.target_data[index])
+        return torch.tensor(sent_input_vec), torch.tensor(self.target_data[index]).type(torch.LongTensor)
 
     def __len__(self):
         return self.length

@@ -20,7 +20,7 @@ def train():
     writer =  SummaryWriter()
 
     # LSTM configs
-    batch_size = 32
+    batch_size = 256
     n_iters = 50000
     visible_gpus = 0
     seed = 7777
@@ -28,9 +28,9 @@ def train():
     # Create RNN
     input_dim = 128  # input dimension
     hidden_dim = 256 # hidden layer dimension
-    layer_dim = 4  # number of hidden layers
+    layer_dim = 6  # number of hidden layers
     output_dim = 2  # output dimension
-    seq_len = 40
+    seq_len = 80
 
     # # RNN configs
     # batch_size = 32
@@ -76,7 +76,7 @@ def train():
     #     valid_ext_list_hit = pickle.load(f)
 
     num_epochs = n_iters / (len(tokenized_data) / batch_size)
-    num_epochs = int(num_epochs)
+    num_epochs = 100
 
 
     # Pytorch train and test sets
@@ -100,7 +100,7 @@ def train():
     error = nn.CrossEntropyLoss()
 
     # Adam Optimizer
-    learning_rate = 0.01
+    learning_rate = 0.05
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
 
     loss_list = []
@@ -124,7 +124,10 @@ def train():
             #h0 = torch.zeros(layer_dim, train.size(0), hidden_dim, requires_grad=True).to(device="cuda")
             # Initialize cell state
             #c0 = torch.zeros(layer_dim, train.size(0), hidden_dim, requires_grad=True).to(device="cuda")
-            outputs = model(train)
+
+            h0 = torch.zeros(layer_dim, train.size(0), hidden_dim).to(device="cuda")
+            c0 = torch.zeros(layer_dim, train.size(0), hidden_dim).to(device="cuda")
+            outputs = model(train, h0, c0)
 
             # Calculate softmax and ross entropy loss
 
@@ -140,7 +143,7 @@ def train():
             
             writer.add_scalar('train loss', loss.data ,count)
 
-            if count % 500 == 0:
+            if count % 100 == 0:
                 # Calculate Accuracy
                 correct = 0
                 total = 0
@@ -152,15 +155,13 @@ def train():
                         images_, labels_ = images_.to("cuda"), labels_.to("cuda")
                         total += labels_.size(0)
                         images_ = images_.view(-1, seq_len, input_dim)
-                        # h0_ = torch.zeros(layer_dim, images_.size(0), hidden_dim, requires_grad=False).to(device="cuda")
-                        # c0_ = torch.zeros(layer_dim, images_.size(0), hidden_dim, requires_grad=False).to(device="cuda")
-                        outputs_ = model(images_)
+                        h0_ = torch.zeros(layer_dim, images_.size(0), hidden_dim).to(device="cuda")
+                        c0_ = torch.zeros(layer_dim, images_.size(0), hidden_dim).to(device="cuda")
+                        outputs_ = model(images_, h0_, c0_)
                         # Get predictions from the maximum value
                         predicted = torch.max(outputs_.data, 1)[1]
                         # Total number of labels
                         #valid_output_list += outputs_
-
-
                         correct += torch.eq(predicted, labels_).sum().item()
 
                     accuracy = 100 * correct / float(total)
