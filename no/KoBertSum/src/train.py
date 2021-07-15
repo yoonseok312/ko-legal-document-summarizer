@@ -4,11 +4,13 @@
 """
 from __future__ import division
 
+from subprocess import call
+import torch
 import argparse
 import os
 from others.logging import init_logger
 #from train_abstractive import validate_abs, train_abs, baseline, test_abs, test_text_abs
-from train_extractive import train_ext, validate_ext, test_ext
+from train_extractive import train_ext, validate_ext, test_ext, train_validate_ext
 
 model_flags = ['hidden_size', 'ff_size', 'heads', 'emb_size', 'enc_layers', 'enc_hidden_size', 'enc_ff_size',
                'dec_layers', 'dec_hidden_size', 'dec_ff_size', 'encoder', 'ff_actv', 'use_interval']
@@ -22,26 +24,57 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
+PROBLEM = 'ext'
+
+## 사용할 path 정의
+# PROJECT_DIR = '/tmp/pycharm_project_581/no/KoBertSum'
+PROJECT_DIR = os.getcwd()
+print(PROJECT_DIR)
+
+DATA_DIR = f'{PROJECT_DIR}/{PROBLEM}/data'
+RAW_DATA_DIR = DATA_DIR + '/raw'
+JSON_DATA_DIR = DATA_DIR + '/json_data'
+BERT_DATA_DIR = DATA_DIR + '/bert_data'
+LOG_DIR = f'{PROJECT_DIR}/{PROBLEM}/logs'
+LOG_PREPO_FILE = LOG_DIR + '/preprocessing.log'
+
+MODEL_DIR = f'{PROJECT_DIR}/{PROBLEM}/models'
+RESULT_DIR = f'{PROJECT_DIR}/{PROBLEM}/results'
 
 
 
 if __name__ == '__main__':
+
+    # os.system(f"""
+    #             python3 train.py -task ext -mode validate \
+    #             -test_from {MODEL_DIR}/1209_1237/model_step_6000.pt \
+    #             -bert_data_path {BERT_DATA_DIR}/test \
+    #             -result_path {RESULT_DIR}/result_1209_1237 \
+    #             -log_file {LOG_DIR}/test_1209_1237.log \
+    #             -test_batch_size 1  -batch_size 3000 \
+    #             -sep_optim true -use_interval true -visible_gpus 0 \
+    #             -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50 \
+    #             -report_rouge False \
+    #             -max_tgt_len 100
+    #         """)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
-    parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test'])
-    parser.add_argument("-bert_data_path", default='../bert_data_new/cnndm')
+    parser.add_argument("-mode", default='test', type=str, choices=['train', 'validate', 'test'])
+    parser.add_argument("-bert_data_path", default='/tmp/pycharm_project_581/no/KoBertSum/ext/data/bert_data/train_ext')
     parser.add_argument("-model_path", default='../models/')
-    parser.add_argument("-result_path", default='../results/cnndm')
+    parser.add_argument("-result_path", default=f'{RESULT_DIR}/result_1209_1237')
     parser.add_argument("-temp_dir", default='../temp')
 
     parser.add_argument("-batch_size", default=140, type=int)
     parser.add_argument("-test_batch_size", default=200, type=int)
 
-    parser.add_argument("-max_pos", default=512, type=int)
+    parser.add_argument("-max_pos", default=2304, type=int)
     parser.add_argument("-use_interval", type=str2bool, nargs='?',const=True,default=True)
     parser.add_argument("-large", type=str2bool, nargs='?',const=True,default=False)
     parser.add_argument("-load_from_extractive", default='', type=str)
+
 
     parser.add_argument("-sep_optim", type=str2bool, nargs='?',const=True,default=False)
     parser.add_argument("-lr_bert", default=2e-3, type=float)
@@ -63,7 +96,7 @@ if __name__ == '__main__':
     # params for EXT
     parser.add_argument("-ext_dropout", default=0.2, type=float)
     parser.add_argument("-ext_layers", default=2, type=int)
-    parser.add_argument("-ext_hidden_size", default=768, type=int)
+    parser.add_argument("-ext_hidden_size", default=512, type=int)
     parser.add_argument("-ext_heads", default=8, type=int)
     parser.add_argument("-ext_ff_size", default=2048, type=int)
 
@@ -71,10 +104,9 @@ if __name__ == '__main__':
     parser.add_argument("-generator_shard_size", default=32, type=int)
     parser.add_argument("-alpha",  default=0.6, type=float)
     parser.add_argument("-beam_size", default=5, type=int)
-    parser.add_argument("-min_length", default=15, type=int)
+    parser.add_argument("-min_length", default=4, type=int)
     parser.add_argument("-max_length", default=150, type=int)
     parser.add_argument("-max_tgt_len", default=140, type=int)
-
 
 
     parser.add_argument("-param_init", default=0, type=float)
@@ -97,11 +129,11 @@ if __name__ == '__main__':
 
     parser.add_argument('-visible_gpus', default='-1', type=str)
     parser.add_argument('-gpu_ranks', default='0', type=str)
-    parser.add_argument('-log_file', default='../logs/cnndm.log')
+    parser.add_argument('-log_file', default='../ext/logs/test_1209_1237.log')
     parser.add_argument('-seed', default=666, type=int)
 
-    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=False)
-    parser.add_argument("-test_from", default='')
+    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=True)
+    parser.add_argument("-test_from", default=f'{MODEL_DIR}/bert_9_2/model_step_15000.pt')
     parser.add_argument("-test_start_from", default=-1, type=int)
 
     parser.add_argument("-train_from", default='')
@@ -114,8 +146,8 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpus
 
     init_logger(args.log_file)
-    device = "cpu" if args.visible_gpus == '-1' else "cuda"
-    device_id = 0 if device == "cuda" else -1
+    device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
+    device_id = 0 if device == f"cuda:{args.visible_gpus}" else -1
 
     # if (args.task == 'abs'):
     #     if (args.mode == 'train'):
@@ -142,18 +174,32 @@ if __name__ == '__main__':
     #             test_text_abs(args, device_id, cp, step)
 
     # elif (args.task == 'ext'):
+
     if (args.task == 'ext'):
         if (args.mode == 'train'):
             train_ext(args, device_id)
         elif (args.mode == 'validate'):
+            print('__CUDNN VERSION:', torch.backends.cudnn.version())
+            print('__Number CUDA Devices:', torch.cuda.device_count())
+            print('__Devices')
+            call(["nvidia-smi", "--format=csv",
+                  "--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free"])
+            print('Active CUDA Device: GPU', torch.cuda.current_device())
+
+            print('Available devices ', torch.cuda.device_count())
+            print('Current cuda device ', torch.cuda.current_device())
             validate_ext(args, device_id)
+        elif (args.mode == 'train_valid'):
+            train_validate_ext(args, device_id)
         if (args.mode == 'test'):
             cp = args.test_from
+            print(cp)
             try:
                 step = int(cp.split('.')[-2].split('_')[-1])
             except:
                 step = 0
             test_ext(args, device_id, cp, step)
+            print("called")
         elif (args.mode == 'test_text'):
             cp = args.test_from
             try:

@@ -71,6 +71,7 @@ class TransformerEncoderLayer(nn.Module):
 
 
 class ExtTransformerEncoder(nn.Module):
+
     def __init__(self, d_model, d_ff, heads, dropout, num_inter_layers=0):
         super(ExtTransformerEncoder, self).__init__()
         self.d_model = d_model
@@ -89,15 +90,25 @@ class ExtTransformerEncoder(nn.Module):
 
         batch_size, n_sents = top_vecs.size(0), top_vecs.size(1)
         pos_emb = self.pos_emb.pe[:, :n_sents]
+
         x = top_vecs * mask[:, :, None].float()
         x = x + pos_emb
 
         for i in range(self.num_inter_layers):
             x = self.transformer_inter[i](i, x, x, ~mask)  # all_sents * max_tokens * dim
 
+        # x = self.layer_norm(x)
+        # if x.size(1) >= 15:
+        #     lstm = True
+        #     lstm_x = self.layer_norm(x)
+        #     sent_scores = self.sigmoid(lstm_x)
+        # else:
+        lstm = False
         x = self.layer_norm(x)
         sent_scores = self.sigmoid(self.wo(x))
         sent_scores = sent_scores.squeeze(-1) * mask.float()
+        # print(x.size(1))
+        # sent_scores = sent_scores * mask.float() # sent_scores.squeeze(-1) * mask.float()
 
-        return sent_scores
+        return sent_scores, lstm
 

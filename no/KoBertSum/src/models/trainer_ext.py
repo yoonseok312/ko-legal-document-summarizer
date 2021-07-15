@@ -161,6 +161,21 @@ class Trainer(object):
                         normalization = 0
                         if (step % self.save_checkpoint_steps == 0 and self.gpu_rank == 0):
                             self._save(step)
+                            # device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
+                            # device_id = 0 if device == "cuda" else -1
+                  #           os.chdir(PROJECT_DIR + '/src')
+                  #           os.system(f"python train.py -task ext -mode train_valid"
+                  # + f" -model_path {MODEL_DIR}/{args.model_path}"
+                  # + f" -bert_data_path {BERT_DATA_DIR}/valid_ext"
+                  # + f" -result_path {RESULT_DIR}/result_{args.model_path}"
+                  # + f" -log_file {LOG_DIR}/valid_{args.model_path}.log"
+                  # + f" -test_batch_size 500  -batch_size 3000"
+                  # + f" -sep_optim true -use_interval true -visible_gpus {args.visible_gpus}"
+                  # + f" -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50"
+                  # + f" -report_rouge False"
+                  # + f" -max_tgt_len 100"
+                  # )
+                            # call validate_ext
 
                         step += 1
                         if step > train_steps:
@@ -179,10 +194,37 @@ class Trainer(object):
         self.model.eval()
         stats = Statistics()
 
+        final_idx = []
+        all_labels = []
+
         with torch.no_grad():
+            total_count = 0
+            error_count = 0
             for batch in valid_iter:
                 src = batch.src
                 labels = batch.src_sent_labels
+                count = 0
+
+                for i in range(batch.batch_size):
+                    total_count += 1
+                    count = 0
+                    for j in range(batch.clss.size(1)):
+                        if labels[i][j] == 1:
+                            count += 1
+                    if count == 3:
+                        continue
+                    else:
+                        error_count += 1
+                        print("error", labels[i])
+
+
+
+
+
+                all_labels.extend([[j for j in range(batch.clss.size(1)) if labels[i][j] == 1] for i in
+                                   range(batch.batch_size)])
+                # print(batch.clss.size(1))
+
                 segs = batch.segs
                 clss = batch.clss
                 mask = batch.mask_src
@@ -192,12 +234,64 @@ class Trainer(object):
                 # print(labels)
                 # print(sent_scores)
                 # print(mask)
+                # print("sent scores:", sent_scores)
+                # print("labels:", labels.float())
                 loss = self.loss(sent_scores, labels.float())
                 loss = (loss * mask.float()).sum()
+
+                sent_scores = sent_scores + mask.float()
+                sent_scores = sent_scores.cpu().data.numpy()
+                # print(sent_scores)
+                selected_ids = np.argsort(-sent_scores, 1)
+
+                for i, idx in enumerate(selected_ids):
+                    batch_selected_idx = []
+                    _pred = []
+                    _pred_idx = []
+                    if (len(batch.src_str[i]) == 0):
+                        continue
+                    for j in selected_ids[i][:len(batch.src_str[i])]:
+                        if (j >= len(batch.src_str[i])):
+                            continue
+                        # _pred_idx.append(j)
+                        batch_selected_idx.append(j)
+
+                        if len(batch_selected_idx) == 3:
+                            break
+
+                    # if len(_pred) < 3:
+                    #     # print(_pred)
+                    #     #print('selected_ids: ', selected_ids)
+                    #     # print('batch.src_str[i]: ', batch.src_str[i])
+                    #     # print('selected_ids[i]: ', selected_ids[i])
+                    #     _pred = np.array(batch.src_str[i])[selected_ids[i][:3]]
+                    #     # print(_pred)
+
+                    if len(batch_selected_idx) < 3:
+                        # print(batch_selected_idx)
+                        # print('selected_ids: ', selected_ids)
+                        # print('batch.src_str[i]: ', batch.src_str[i])
+                        # print('selected_ids[i]: ', selected_ids[i])
+                        batch_selected_idx = selected_ids[i][:3]
+                        # print(batch_selected_idx)
+
+
+                    # _pred = '<q>'.join(_pred)
+                    # if (self.args.recall_eval):
+                    #     _pred = ' '.join(_pred.split()[:len(batch.tgt_str[i].split())])
+
+                    # pred.append(_pred)
+                    # pred_idx.append(_pred_idx)
+                    # gold.append(batch.tgt_str[i])
+                    final_idx.append(batch_selected_idx)
+
                 batch_stats = Statistics(float(loss.cpu().data.numpy()), len(labels))
                 stats.update(batch_stats)
+            # print(error_count, total_count)
             self._report_step(0, step, valid_stats=stats)
-            return stats
+            print(len(final_idx))
+            print(len(all_labels))
+            return stats, final_idx, all_labels
 
     def test(self, test_iter, step, cal_lead=False, cal_oracle=False):
         """ Validate model.
@@ -230,6 +324,7 @@ class Trainer(object):
         can_path = '%s_step_%d.candidate' % (self.args.result_path, step)
         gold_path = '%s_step_%d.gold' % (self.args.result_path, step)
         num_path = '%s_step_%d_num.csv' % (self.args.result_path, step)
+
         with open(can_path, 'w') as save_pred:
             with open(gold_path, 'w') as save_gold, open(num_path, 'w') as save_num:
                 with torch.no_grad():
@@ -275,26 +370,44 @@ class Trainer(object):
                                 if (j >= len(batch.src_str[i])):
                                     continue
                                 candidate = batch.src_str[i][j].strip()
-                                if (self.args.block_trigram):
-                                    if (not _block_tri(candidate, _pred)):
-                                        _pred.append(candidate)
-                                        _pred_idx.append(j)
-                                        batch_selected_idx.append(j)
-                                else:
-                                    _pred.append(candidate)
-                                    _pred_idx.append(j)
-                                    batch_selected_idx.append(j)
+                                # if (self.args.block_trigram):
+                                #     if (not _block_tri(candidate, _pred)):
+                                #         _pred.append(candidate)
+                                #         _pred_idx.append(j)
+                                #         batch_selected_idx.append(j)
+                                # else:
+                                _pred.append(candidate)
+                                _pred_idx.append(j)
+                                batch_selected_idx.append(j)
 
                                 if ((not cal_oracle) and (not self.args.recall_eval) and len(_pred) == 3):
                                     break
-                            
-                            if len(_pred) < 3:
-                                print(_pred)
-                                #print('selected_ids: ', selected_ids)
+
+
+                            if len(batch_selected_idx) < 3:
+                                print(batch_selected_idx)
+                                # print('selected_ids: ', selected_ids)
                                 print('batch.src_str[i]: ', batch.src_str[i])
                                 print('selected_ids[i]: ', selected_ids[i])
-                                _pred = np.array(batch.src_str[i])[selected_ids[i][:3]]
-                                print(_pred)
+                                batch_selected_idx = selected_ids[i][:3]
+                                print(batch_selected_idx)
+
+                            # if len(_pred) < 3:
+                            #     print(_pred)
+                            #     #print('selected_ids: ', selected_ids)
+                            #     print('batch.src_str[i]: ', batch.src_str[i])
+                            #     print('selected_ids[i]: ', selected_ids[i])
+                            #     _pred = np.array(batch.src_str[i])[selected_ids[i][:3]]
+                            #     print(_pred)
+
+                            if len(batch_selected_idx) < 3:
+                                print(batch_selected_idx)
+                                # print('selected_ids: ', selected_ids)
+                                print('batch.src_str[i]: ', batch.src_str[i])
+                                print('selected_ids[i]: ', selected_ids[i])
+                                batch_selected_idx = selected_ids[i][:3]
+                                print(batch_selected_idx)
+
 
 
                             _pred = '<q>'.join(_pred)
@@ -321,6 +434,120 @@ class Trainer(object):
         self._report_step(0, step, valid_stats=stats)
 
         return stats
+    
+    def test_for_results_only(self, test_iter, step, cal_lead=False, cal_oracle=False):
+        """ Validate model.
+            valid_iter: validate data iterator
+        Returns:
+            :obj:`nmt.Statistics`: validation loss statistics
+        """
+
+        # Set model in validating mode.
+        def _get_ngrams(n, text):
+            ngram_set = set()
+            text_length = len(text)
+            max_index_ngram_start = text_length - n
+            for i in range(max_index_ngram_start + 1):
+                ngram_set.add(tuple(text[i:i + n]))
+            return ngram_set
+
+        def _block_tri(c, p):
+            tri_c = _get_ngrams(3, c.split())
+            for s in p:
+                tri_s = _get_ngrams(3, s.split())
+                if len(tri_c.intersection(tri_s)) > 0:
+                    return True
+            return False
+
+        if (not cal_lead and not cal_oracle):
+            self.model.eval()
+        stats = Statistics()
+        
+        final_idx = []
+        all_labels = []
+        
+        with torch.no_grad():
+            for batch in test_iter:
+                print(batch)
+                src = batch.src
+                labels = batch.src_sent_labels
+                segs = batch.segs
+                clss = batch.clss
+                mask = batch.mask_src
+                mask_cls = batch.mask_cls
+
+                gold = []
+                pred = []
+                pred_idx = []
+                
+
+                if (cal_lead):
+                    selected_ids = [list(range(batch.clss.size(1)))] * batch.batch_size
+                elif (cal_oracle):
+                    selected_ids = [[j for j in range(batch.clss.size(1)) if labels[i][j] == 1] for i in
+                                    range(batch.batch_size)]
+                else:
+                    sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
+
+                    loss = self.loss(sent_scores, labels.float())
+                    loss = (loss * mask.float()).sum()
+                    batch_stats = Statistics(float(loss.cpu().data.numpy()), len(labels))
+                    stats.update(batch_stats)
+
+                    sent_scores = sent_scores + mask.float()
+                    sent_scores = sent_scores.cpu().data.numpy()
+                    # print(sent_scores)
+                    selected_ids = np.argsort(-sent_scores, 1)
+                    # print(selected_ids)
+                # selected_ids = np.sort(selected_ids,1)
+                all_labels.extend([[j for j in range(batch.clss.size(1)) if labels[i][j] == 1] for i in
+                                    range(batch.batch_size)])
+                for i, idx in enumerate(selected_ids):
+                    batch_selected_idx = []
+                    _pred = []
+                    _pred_idx = []
+                    if (len(batch.src_str[i]) == 0):
+                        continue
+                    for j in selected_ids[i][:len(batch.src_str[i])]:
+                        if (j >= len(batch.src_str[i])):
+                            continue
+                        candidate = batch.src_str[i][j].strip()
+                        if (self.args.block_trigram):
+                            if (not _block_tri(candidate, _pred)):
+                                _pred.append(candidate)
+                                _pred_idx.append(j)
+                                batch_selected_idx.append(j)
+                        else:
+                            _pred.append(candidate)
+                            _pred_idx.append(j)
+                            batch_selected_idx.append(j)
+
+                        if ((not cal_oracle) and (not self.args.recall_eval) and len(_pred) == 3):
+                            break
+
+                    if len(_pred) < 3:
+                        print(_pred)
+                        #print('selected_ids: ', selected_ids)
+                        print('batch.src_str[i]: ', batch.src_str[i])
+                        print('selected_ids[i]: ', selected_ids[i])
+                        _pred = np.array(batch.src_str[i])[selected_ids[i][:3]]
+                        print(_pred)
+
+
+                    _pred = '<q>'.join(_pred)
+                    if (self.args.recall_eval):
+                        _pred = ' '.join(_pred.split()[:len(batch.tgt_str[i].split())])
+
+                    pred.append(_pred)
+                    pred_idx.append(_pred_idx)
+                    gold.append(batch.tgt_str[i])
+                    final_idx.append(batch_selected_idx)
+            print(final_idx)
+            print(all_labels)
+
+        # TODO 1. using this function (maybe in test_ext())
+        # TODO 2. get answer extractive label(ex. [0, 1, 2]) -> in this function? or in other function?
+        return final_idx, all_labels
 
     def _gradient_accumulation(self, true_batchs, normalization, total_stats,
                                report_stats):

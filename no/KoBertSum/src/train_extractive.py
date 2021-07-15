@@ -10,7 +10,9 @@ import os
 import random
 import signal
 import time
+import copy
 
+# import pandas as pd
 import torch
 
 import distributed
@@ -103,6 +105,7 @@ class ErrorHandler(object):
         raise Exception(msg)
 
 
+
 def validate_ext(args, device_id):
     timestep = 0
     if (args.test_all):
@@ -123,7 +126,8 @@ def validate_ext(args, device_id):
             test_ext(args, device_id, cp, step)
     else:
         while (True):
-            cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+            # cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+            cp_files = glob.glob(os.path.join(args.model_path, 'model_step_15000.pt'))
             cp_files.sort(key=os.path.getmtime)
             if (cp_files):
                 cp = cp_files[-1]
@@ -147,20 +151,50 @@ def validate_ext(args, device_id):
             else:
                 time.sleep(300)
 
+def train_validate_ext(step, args, device_id):
+    timestep = 0
+    # cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+    checkpoint_path = os.path.join(args.model_path, 'model_step_%d.pt' % step)
+    cp_files = glob.glob(os.path.join(args.model_path, 'model_step_500.pt'))
+    cp_files.sort(key=os.path.getmtime)
+    if (cp_files):
+        cp = cp_files[-1]
+        time_of_cp = os.path.getmtime(cp)
+        if (not os.path.getsize(cp) > 0):
+            print("sleeping 60 sec...")
+            time.sleep(60)
+        if (time_of_cp > timestep):
+            timestep = time_of_cp
+            step = int(cp.split('.')[-2].split('_')[-1])
+            validate(args, device_id, cp, step)
+            test_ext(args, device_id, cp, step)
+
+    cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+    cp_files.sort(key=os.path.getmtime)
+    if (cp_files):
+        cp = cp_files[-1]
+        time_of_cp = os.path.getmtime(cp)
+        # if (time_of_cp > timestep):
+        #     continue
+    else:
+        print("sleeping 300 sec...")
+        time.sleep(300)
+
 
 def validate(args, device_id, pt, step):
-    device = "cpu" if args.visible_gpus == '-1' else "cuda"
+    device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
     if (pt != ''):
         test_from = pt
     else:
         test_from = args.test_from
+    # test_from = '/tmp/pycharm_project_138/no/KoBertSum/ext/models/1209_1236/model_step_8000.pt'
     logger.info('Loading checkpoint from %s' % test_from)
     checkpoint = torch.load(test_from, map_location=lambda storage, loc: storage)
     opt = vars(checkpoint['opt'])
     for k in opt.keys():
         if (k in model_flags):
             setattr(args, k, opt[k])
-    print(args)
+    # print(args)
 
     model = ExtSummarizer(args, device, checkpoint)
     model.eval()
@@ -169,12 +203,28 @@ def validate(args, device_id, pt, step):
                                         args.batch_size, device,
                                         shuffle=False, is_test=False)
     trainer = build_trainer(args, device_id, model, None)
-    stats = trainer.validate(valid_iter, step)
+    # valid_iter_2 = copy.deepcopy(valid_iter)
+    stats, predicted_labels, true_labels = trainer.validate(valid_iter, step)
+    #print("predicted:", predicted_labels)
+    # print("true:", true_labels)
+    #predicted_labels, true_labels = trainer.test_for_results_only(valid_iter_2, step)
+    results = []
+    for i in range(len(true_labels)):
+        x = 0
+        for j in range(len(predicted_labels[i])):
+            if predicted_labels[i][j] in true_labels[i]:
+                x += 1
+        results.append(x)
+    for i in range(4):
+        print(i, "hits:", results.count(i))
+    print("Hit rate", (results.count(1) + results.count(2) * 2 + results.count(3) * 3)/((results.count(0) + results.count(1) + results.count(2) + results.count(3)) * 3))
+    # ext_df = pd.DataFrame({"predict": predicted_labels, "answer": true_labels, "hit_count": results})
+    # ext_df.to_csv(f"validation_hit_stats_step_{step}")
     return stats.xent()
 
 
 def test_ext(args, device_id, pt, step):
-    device = "cpu" if args.visible_gpus == '-1' else "cuda:1"
+    device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
     if (pt != ''):
         test_from = pt
     else:
@@ -206,7 +256,7 @@ def train_ext(args, device_id):
 def train_single_ext(args, device_id):
     init_logger(args.log_file)
 
-    device = "cpu" if args.visible_gpus == '-1' else "cuda"
+    device = "cpu" if args.visible_gpus == '-1' else f"cuda:{args.visible_gpus}"
     logger.info('Device ID %d' % device_id)
     logger.info('Device %s' % device)
     torch.manual_seed(args.seed)

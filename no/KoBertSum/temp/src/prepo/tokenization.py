@@ -39,16 +39,16 @@ PRETRAINED_VOCAB_ARCHIVE_MAP = {
     "monologg/distilkobert": "https://s3.amazonaws.com/models.huggingface.co/bert/monologg/distilkobert/vocab.txt"
 }
 PRETRAINED_VOCAB_POSITIONAL_EMBEDDINGS_SIZE_MAP = {
-    'bert-base-uncased': 512,
-    'bert-large-uncased': 512,
-    'bert-base-cased': 512,
-    'bert-large-cased': 512,
-    'bert-base-multilingual-uncased': 512,
-    'bert-base-multilingual-cased': 512,
-    'bert-base-chinese': 512,
+    'bert-base-uncased': 2304,
+    'bert-large-uncased': 2304,
+    'bert-base-cased': 2304,
+    'bert-large-cased': 2304,
+    'bert-base-multilingual-uncased': 2304,
+    'bert-base-multilingual-cased': 2304,
+    'bert-base-chinese': 2304,
     "monologg/kobert": 512,
-    "monologg/kobert-lm": 512,
-    "monologg/distilkobert": 512,
+    "monologg/kobert-lm": 2304,
+    "monologg/distilkobert": 2304,
 }
 VOCAB_NAME = 'vocab.txt'
 

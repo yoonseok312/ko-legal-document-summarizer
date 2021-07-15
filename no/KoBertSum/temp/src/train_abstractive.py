@@ -171,6 +171,7 @@ def validate(args, device_id, pt, step):
         test_from = pt
     else:
         test_from = args.test_from
+    # test_from = '/tmp/pycharm_project_138/no/KoBertSum/ext/models/1209_1236/model_step_8000.pt'
     logger.info('Loading checkpoint from %s' % test_from)
     checkpoint = torch.load(test_from, map_location=lambda storage, loc: storage)
     opt = vars(checkpoint['opt'])

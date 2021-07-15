@@ -20,6 +20,7 @@ class Batch(object):
         """Create a Batch from a list of examples."""
         if data is not None:
             self.batch_size = len(data)
+            # print([x for x in data[0]])
             pre_src = [x[0] for x in data]
             pre_tgt = [x[1] for x in data]
             pre_segs = [x[2] for x in data]
@@ -35,6 +36,10 @@ class Batch(object):
 
 
             clss = torch.tensor(self._pad(pre_clss, -1))
+            for i in range(len(pre_src_sent_labels)):
+                if sum(pre_src_sent_labels[i]) < 3:
+                    print("batch ext not 3", pre_src_sent_labels[i])
+                    print("len", len(pre_src_sent_labels[i]))
             src_sent_labels = torch.tensor(self._pad(pre_src_sent_labels, 0))
             mask_cls = ~(clss == -1)
             clss[clss == -1] = 0
@@ -50,11 +55,12 @@ class Batch(object):
             setattr(self, 'mask_tgt', mask_tgt.to(device))
 
 
-            if (is_test):
-                src_str = [x[-2] for x in data]
-                setattr(self, 'src_str', src_str)
-                tgt_str = [x[-1] for x in data]
-                setattr(self, 'tgt_str', tgt_str)
+            # FIXME : validation 추가하기
+            # if (is_test):
+            src_str = [x[-2] for x in data]
+            setattr(self, 'src_str', src_str)
+            tgt_str = [x[-1] for x in data]
+            setattr(self, 'tgt_str', tgt_str)
 
     def __len__(self):
         return self.batch_size
@@ -84,14 +90,16 @@ def load_dataset(args, corpus_type, shuffle):
     pts = sorted(glob.glob(args.bert_data_path + '/' + corpus_type + '.[0-9]*.pt'))
     print(pts)
     if pts:
+        print("pts")
         if (shuffle):
             random.shuffle(pts)
 
         for pt in pts:
             yield _lazy_dataset_loader(pt, corpus_type)
     else:
+        print("no pts")
         # Only one inputters.*Dataset, simple!
-        pt = args.bert_data_path + '/' + corpus_type + '.pt'
+        pt = args.bert_data_path + '/' + 'valid.0000_2402.bert.pt' # FIXME
         yield _lazy_dataset_loader(pt, corpus_type)
 
 
@@ -122,6 +130,7 @@ def ext_batch_size_fn(new, count):
     max_n_sents = max(max_n_sents, len(src))
     max_size = max(max_size, max_n_sents)
     src_elements = count * max_size
+    # print("max_n_sents", max_n_sents)
     return src_elements
 
 
@@ -155,6 +164,9 @@ class Dataloader(object):
                 gc.collect()
 
             self.cur_dataset = next(dataset_iter)
+            # for i in range(len(self.cur_dataset)):
+            #     if sum(self.cur_dataset[i][4]) < 3:
+            #         print("fatal error 3")
         except StopIteration:
             return None
 
@@ -193,21 +205,23 @@ class DataIterator(object):
 
     def preprocess(self, ex, is_test):
         src = ex['src']
-        tgt = ex['tgt'][:self.args.max_tgt_len][:-1]+[2]
+        tgt = ex['tgt']
+        # tgt = ex['tgt'][:self.args.max_tgt_len][:-1]+[2]
         src_sent_labels = ex['src_sent_labels']
         segs = ex['segs']
         if(not self.args.use_interval):
             segs=[0]*len(segs)
         clss = ex['clss']
+        # print("clss", clss)
         src_txt = ex['src_txt']
         tgt_txt = ex['tgt_txt']
 
         end_id = [src[-1]]
-        src = src[:-1][:self.args.max_pos - 1] + end_id
-        segs = segs[:self.args.max_pos]
+        # src = src[:-1][:self.args.max_pos - 1] + end_id
+        # segs = segs[:self.args.max_pos]
         max_sent_id = bisect.bisect_left(clss, self.args.max_pos)
-        src_sent_labels = src_sent_labels[:max_sent_id]
-        clss = clss[:max_sent_id]
+        # src_sent_labels = src_sent_labels[:max_sent_id]
+        # clss = clss[:max_sent_id]
         # src_txt = src_txt[:max_sent_id]
 
 
@@ -233,12 +247,16 @@ class DataIterator(object):
             elif size_so_far > batch_size:
                 yield minibatch[:-1]
                 minibatch, size_so_far = minibatch[-1:], self.batch_size_fn(ex, 1)
+            # for i in range(len(minibatch[:-1])):
+            #     if sum(minibatch[i][4]) < 3:
+                    # print("fatal error 4")
         if minibatch:
             yield minibatch
 
     def batch(self, data, batch_size):
         """Yield elements from data in chunks of batch_size."""
         minibatch, size_so_far = [], 0
+        count = 0
         for ex in data:
             minibatch.append(ex)
             size_so_far = self.batch_size_fn(ex, len(minibatch))
@@ -247,6 +265,11 @@ class DataIterator(object):
                 minibatch, size_so_far = [], 0
             elif size_so_far > batch_size:
                 yield minibatch[:-1]
+                # for i in range(len(minibatch[:-1])):
+                #     if sum(minibatch[i][4]) < 3:
+                #         count += 1
+                        # print("fatal error 2")
+                # print("fatal count", count)
                 minibatch, size_so_far = minibatch[-1:], self.batch_size_fn(ex, 1)
         if minibatch:
             yield minibatch
